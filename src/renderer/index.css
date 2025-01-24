@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden; 
+}
+
+@font-face{
+    font-family: 'calibri-bold';
+    src: url('../assets/fonts/calibri-bold.ttf') format('truetype');
+    font-weight: bold;
+    font-display: swap;
+}
+@font-face{
+    font-family: 'calibri-italic';
+    src: url('../assets/fonts/Calibri-italic.ttf') format('truetype');
+    font-weight: italic;
+    font-display: swap;
+}
+@font-face{
+    font-family: 'calibri-regular';
+    src: url('../assets//fonts/calibri-regular.ttf') format('truetype');
+    font-weight: 400;
+    font-display: swap;
+}
+
+/* ENCODE SANS */
+@font-face{
+    font-family: 'EncodeSans-Bold';
+    src: url('../assets/fonts/EncodeSans-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-display: swap;
+
+}
+@font-face{
+    font-family: 'EncodeSans-Light';
+    src: url('../assets/fonts/EncodeSans-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-display: swap;
+
+}
+@font-face{
+    font-family: 'EncodeSans-Medium';
+    src: url('../assets/fonts/EncodeSans-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-display: swap;
+
+}
+@font-face{
+    font-family: 'EncodeSans-Regular';
+    src: url('../assets/fonts/EncodeSans-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-display: swap;
+
+}
+/* KANIT */
+/* @layer base { */
+@font-face{
+    font-family: 'Kanit-Bold';
+    src: url('../assets/fonts/Kanit-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-display: swap;
+
+}
+
+@font-face{
+    font-family: 'Kanit-Light';
+    src: url('../assets/fonts/Kanit-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-display: swap;
+}
+@font-face{
+    font-family: 'Kanit-Medium';
+    src: url('../assets/fonts/Kanit-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-display: swap;
+}
+@font-face{
+    font-family: 'Kanit-Regular';
+    src: url('../assets/fonts/Kanit-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-display: swap;
+}
+
