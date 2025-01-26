@@ -48,7 +48,7 @@ const LicenseRequestList = ({ requests, onDataChange }) => {
 
   // const validatedRequests = requests.filter((request) => request.status === 'generado')
   const validatedRequests = requests.filter(
-    (request) => request.status === 'generado' || request.status === 'aprobado'
+    (request) => request.status === 'generado' || request.status === 'aprobada'
   )
 
   const filteredRequests = validatedRequests.filter((request) => {

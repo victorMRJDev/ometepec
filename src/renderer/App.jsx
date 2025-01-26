@@ -15,9 +15,6 @@ function AppContent() {
 
   return user ? <LoggedNavigation /> : <Home />
   // return user ? <LoggedNavigation /> : <h1>Welcome to Home Page</h1>
-
-  
-
 }
 
 function App() {

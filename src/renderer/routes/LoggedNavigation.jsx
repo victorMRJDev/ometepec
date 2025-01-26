@@ -12,19 +12,20 @@ import GenerateReports from '../screens/addPlacas/GererateReports'
 
 const LoggedNavigation = () => {
   return (
-    <BrowserRouter >
-      <div className='flex'>
+    <BrowserRouter basename=''>
+      <div className="flex">
         <Sidebar />
-        <div className='flex-1'>
+        <div className="flex-1">
           <Routes>
             <Route path="/" element={<Listado />} />
+            {/* <Route path="/" element={<h1>Home Page</h1>} /> */}
+
             <Route path="/addLicense" element={<AddLicencia />} />
             <Route path="/history" element={<History />} />
             <Route path="/profile" element={<ProfileUser />} />
             <Route path="/usersystem" element={<ListUsers />} />
             <Route path="/placas/add" element={<AddSolicitudPlacas />} />
             <Route path="/placas/printPerm" element={<GenerateReports />} />
-
           </Routes>
         </div>
       </div>

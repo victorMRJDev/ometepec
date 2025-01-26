@@ -178,7 +178,7 @@ const GenerateReports = () => {
 
       doc.setFontSize(30)
       doc.setTextColor('#000000')
-      doc.text('JUCHITÁN', columnWidth / 2, columnY + 25, { align: 'center' })
+      doc.text('OMETEPEC', columnWidth / 2, columnY + 25, { align: 'center' })
 
       doc.setFontSize(10)
       doc.text('"Convicción De Servir" 2021-2024', columnWidth / 2, columnY + 45, {
@@ -208,7 +208,7 @@ const GenerateReports = () => {
 
       // Línea 4
       doc.text(
-        `JUCHITAN, GRO A ${formatearFecha(permiso.fechaExpedicion)}`,
+        `OMETEPEC, GRO A ${formatearFecha(permiso.fechaExpedicion)}`,
         thirdColumnX,
         columnY + 40,
         { align: 'center' }
@@ -290,7 +290,7 @@ const GenerateReports = () => {
 
       agregarTextoCentrado(doc, 'Atentamente,', firmaY + 40, 12)
       agregarTextoCentrado(doc, 'CMTE. SABAD GARCÍA PRUDENTE', firmaY + 80, 12)
-      agregarTextoCentrado(doc, 'DIRECTOR DE TRÁNSITO MUNICIPAL DE JUCHITAN, GRO.', firmaY + 93, 12)
+      agregarTextoCentrado(doc, 'DIRECTOR DE TRÁNSITO MUNICIPAL DE OMETEPEC, GRO.', firmaY + 93, 12)
 
       // Guardar o descargar el PDF
       doc.save(`Permiso_Provisional_${permiso.folioUnico}.pdf`)
