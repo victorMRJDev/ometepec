@@ -6,7 +6,7 @@ import LicensePreview from '../licenses/LicensePreview'
 const LicenseModal = ({ open, onClose, request }) => {
   console.log('Request en LicenseModal', request)
   return (
-    <Modal open={open} onClose={onClose} size="large" dimmer="blurring">
+    <Modal open={open} onClose={onClose} size="fullscreen" dimmer="blurring">
       <Modal.Header>Generar Licencia</Modal.Header>
       <div className="flex w-12/12 justify-center m-10 ">
         <Modal.Content>

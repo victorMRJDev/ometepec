@@ -113,3 +113,33 @@ CREATE TABLE `usuarios` (
   UNIQUE KEY `numEmpleado` (`numEmpleado`),
   UNIQUE KEY `rfc` (`rfc`)
 );
+
+
+
+INSERT INTO usuarios (
+    nombre, 
+    apellidoPaterno, 
+    apellidoMaterno, 
+    curp, 
+    numEmpleado, 
+    rfc, 
+    edad, 
+    domicilio, 
+    genero, 
+    rolUsuario, 
+    correo, 
+    password
+) VALUES (
+    'Juan', 
+    'Pérez', 
+    'García', 
+    'JUAP920506HMCLRN08', 
+    'E00123', 
+    'PERG920506T89', 
+    31, 
+    'Calle Falsa 123, Ciudad', 
+    'Masculino', 
+    'usuario', 
+    'juan@example.com', 
+    '123'
+);

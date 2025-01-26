@@ -42,15 +42,17 @@ const LicenseRequestList = ({ requests, onDataChange }) => {
     setSelectedRequest(null)
     setIsLicenseModalOpen(false)
     if (onDataChange) {
-      onDataChange() // Re-fetchar datos al cerrar el modal
+      onDataChange()
     }
   }
 
-  const validatedRequests = requests.filter((request) => request.status === 'aprobada')
+  // const validatedRequests = requests.filter((request) => request.status === 'generado')
+  const validatedRequests = requests.filter(
+    (request) => request.status === 'generado' || request.status === 'aprobado'
+  )
 
   const filteredRequests = validatedRequests.filter((request) => {
-    const fullName =
-      `${request.nombres} ${request.apellidoPaterno} ${request.apellidoMaterno}`
+    const fullName = `${request.nombres} ${request.apellidoPaterno} ${request.apellidoMaterno}`
     const licenseNumber = request.numLicencia
     const licenseType = request.tipoLicencia
     const curp = request.curp.toLowerCase()

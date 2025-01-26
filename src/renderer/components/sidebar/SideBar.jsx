@@ -40,7 +40,8 @@ const Sidebar = () => {
               <span>Inicio</span>
             </li>
             <li
-              onClick={() => navigate('/addLicense')}
+              onClick={() => navigate('/addLicense')  }
+              // onClick={() => console.log('PRESIONADO')}
               className="flex items-center gap-4 py-2 px-3 rounded-lg hover:bg-pantone465C-60 cursor-pointer"
             >
               {/* <FaHome size={20} /> */}

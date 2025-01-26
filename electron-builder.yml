@@ -4,16 +4,23 @@ directories:
   buildResources: build
 files:
   - '**/*'
+  - 'dist/**'
+  - 'resources/**'
+  - 'fotografias/**'
+  - 'firmas/**'
   - 'node_modules/**/*'
   - 'build/**/*'
   - 'node_modules/semantic-ui-css/**/*' # Incluye los archivos de Semantic UI
   - '!**/.vscode/*'
   - 'src/*'
+  - 'src/renderer/**'
   - 'electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   # - '!{.npmrc,pnpm-lock.yaml}'
 asarUnpack:
   - resources/**
+  - firmas/**
+  - fotografias/**
 win:
   executableName: ometepect-deskapp
 nsis:

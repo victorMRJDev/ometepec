@@ -12,7 +12,7 @@ import GenerateReports from '../screens/addPlacas/GererateReports'
 
 const LoggedNavigation = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter >
       <div className='flex'>
         <Sidebar />
         <div className='flex-1'>
@@ -25,12 +25,13 @@ const LoggedNavigation = () => {
             <Route path="/placas/add" element={<AddSolicitudPlacas />} />
             <Route path="/placas/printPerm" element={<GenerateReports />} />
 
-
-
           </Routes>
         </div>
       </div>
     </BrowserRouter>
+    // <div>
+    //   <h1>Logged Navigation</h1>
+    // </div>
   )
 }
 

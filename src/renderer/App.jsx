@@ -1,4 +1,4 @@
-import 'semantic-ui-css/semantic.min.css';
+import 'semantic-ui-css/semantic.min.css'
 import React, { useState } from 'react'
 import { UserProvider, useUser } from './hooks/UserContext'
 import Sidebar from './components/sidebar/SideBar'
@@ -14,12 +14,18 @@ function AppContent() {
   console.log('user', user)
 
   return user ? <LoggedNavigation /> : <Home />
+  // return user ? <LoggedNavigation /> : <h1>Welcome to Home Page</h1>
+
+  
+
 }
 
 function App() {
+  console.log('Rendering App Component')
+
   return (
     <UserProvider>
-        <AppContent />
+      <AppContent />
     </UserProvider>
   )
 }
