@@ -34,7 +34,9 @@ const ModalContent = ({
   idPersona,
   costo,
   tipoTramite,
-  duracion
+  duracion,
+  rutaIne,
+  rutaEstSanguineo
 }) => {
   const [formData, setFormData] = useState({
     id: '',
@@ -66,6 +68,8 @@ const ModalContent = ({
     costo: '',
     tipoTramite: '',
     duracion: '',
+    rutaIne: '',
+    rutaEstSanguineo: ''
   })
 
   // Estado para manejar el Dropdown principal (6 opciones)
@@ -116,7 +120,11 @@ const ModalContent = ({
       costo: costo || '',
       tipoTramite: tipoTramite || '',
       duracion: duracion || '',
+      rutaIne: rutaIne || '',
+      rutaEstSanguineo: rutaEstSanguineo || ''
     })
+
+
   }, [
     id,
     nombres,
@@ -146,10 +154,13 @@ const ModalContent = ({
     idPersona,
     costo,
     tipoTramite,
-    duracion
+    duracion,
+    rutaIne,
+    rutaEstSanguineo
   ])
 
-  // Opciones del dropdown principal
+  console.log(formData.firma)
+  console.log(formData.fotografia)
   const opcionesTramite = [
     {
       key: 'serv-particular-1anio',
@@ -183,13 +194,11 @@ const ModalContent = ({
     }
   ]
 
-  // Para "Por expedición o reposición" y "serv-publico"
   const duracionOptions = [
     { key: '3', value: '3', text: '3 años' },
     { key: '5', value: '5', text: '5 años' }
   ]
 
-  // Para “Por expedición o reposición”: categorías
   const categoriasExpedicionOptions = [
     { key: 'chofer', value: 'chofer', text: 'Chofer' },
     { key: 'automovilista', value: 'automovilista', text: 'Automovilista' },
@@ -214,12 +223,10 @@ const ModalContent = ({
     return hoy.toISOString().split('T')[0] // Formato yyyy-mm-dd
   }
 
-  // Actualiza el formData para mantener consistencia
   const handleChange = (e, { name, value }) => {
     setFormData({ ...formData, [name]: value })
   }
 
-  // Maneja la selección principal
   const handleOpcionTramiteChange = (_, { value }) => {
     setOpcionTramite(value)
 
@@ -228,53 +235,47 @@ const ModalContent = ({
       tipoTramite: value,
       duracion: '',
       licenciaDe: '',
-      costo: '',
+      costo: ''
     }))
 
     setFechaVencimientoCalc('')
-    // Dependiendo la opción, se calcula costo y fecha
     switch (value) {
       case 'serv-particular-1anio':
-        // 1 año => Ej. 2.5 UMAS => supón 120.97 pesos
         setFormData((prev) => ({
           ...prev,
           costo: '120.97',
-          duracion:'1 año'
+          duracion: '1 año'
         }))
         setFechaVencimientoCalc(calcularFechaVencimiento(1, 0, 0))
         break
 
       case 'provisional-30dias':
-        // Ej. 1.77 UMAS => supón 85.65 pesos
         setFormData((prev) => ({
           ...prev,
           costo: '85.65',
-          duracion:'30 días'
+          duracion: '30 días'
         }))
         setFechaVencimientoCalc(calcularFechaVencimiento(0, 0, 30))
         break
 
       case '6meses-menores':
-        // Ej. 6.92 UMAS => supón 334.84 pesos
         setFormData((prev) => ({
           ...prev,
           costo: '334.84',
-          duracion:'6 meses'
+          duracion: '6 meses'
         }))
         setFechaVencimientoCalc(calcularFechaVencimiento(0, 6, 0))
         break
 
       case 'maquinas-especializadas':
-        // 1 año => 2.5 UMAS => 120.97 pesos
         setFormData((prev) => ({
           ...prev,
           costo: '120.97',
-          duracion:'1 año'
+          duracion: '1 año'
         }))
         setFechaVencimientoCalc(calcularFechaVencimiento(1, 0, 0))
         break
 
-      // "expedicion-reposicion" y "serv-publico" no definen costo hasta que se seleccione duración y/o categoría
       case 'expedicion-reposicion':
       case 'serv-publico':
       default:
@@ -287,12 +288,9 @@ const ModalContent = ({
       duracion: value
     }))
 
-    // Calculamos fecha venc. con parseInt(value)
     setFechaVencimientoCalc(calcularFechaVencimiento(parseInt(value, 10)))
 
-    // Si es servicio público
     if (formData.tipoTramite === 'serv-publico') {
-      // 3 años => supón 231.29 pesos; 5 años => 318.39
       const costoPublico = value === '3' ? '231.29' : '318.39'
       setFormData((prev) => ({
         ...prev,
@@ -301,9 +299,7 @@ const ModalContent = ({
       return
     }
 
-    // Si es “expedicion-reposicion”: necesitamos la categoría (licenciaDe)
     if (formData.tipoTramite === 'expedicion-reposicion') {
-      // Si ya eligió categoriaExpedicion => recalcular costo
       if (formData.licenciaDe) {
         calcularCostoExpedicion(value, formData.licenciaDe)
       }
@@ -380,13 +376,10 @@ const ModalContent = ({
       const finalData = {
         ...formData,
         fechaVencimiento: fechaVencimientoCalc,
-        // En cuanto se da “Guardar”, el status se pone en "generado"
         status: 'generado'
       }
 
       console.log('Datos a guardar', finalData)
-
-      // Llamada a tu backend o al proceso principal
       const result = await window.api.historyLicencia(finalData)
       // const result = finalData
       // console.log(result)
@@ -394,7 +387,6 @@ const ModalContent = ({
       console.log('Final data:', finalData)
       console.log('FormData data:', formData)
 
-      // Actualiza la licencia principal, si aplica
       await window.api.updateLicenciaFirst(
         finalData.id,
         finalData.status,
@@ -676,14 +668,20 @@ const ModalContent = ({
               <label className="font-kanit-regular text-pantoneCoolGray11C text-2xl mb-1">
                 Fotografía del interesado
               </label>
-              <Image src={fotografia} className="object-contain max-w-full max-h-full" />
+              <Image
+                src={`http://192.168.0.109:3000/uploads/${fotografia}`}
+                className="object-contain max-w-full max-h-full"
+              />
             </div>
 
             <div className="flex flex-col w-10/12 bg-white h-2/6 items-center justify-center">
               <label className="font-kanit-regular text-pantoneCoolGray11C text-2xl mb-1">
                 Firma del interesado
               </label>
-              <Image src={firma} className="object-contain max-w-full max-h-full" />
+              <Image
+                src={`http://192.168.0.109:3000/uploads/${firma}`}
+                className="object-contain max-w-full max-h-full"
+              />
             </div>
 
             <div className="flex justify-center items-center w-10/12 bg-white">

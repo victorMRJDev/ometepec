@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 
 import logoGro from '../../../assets/logos/logo_fRojo.jpg'
 
+const { App } = window
+
+
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true)
   const [showPlacas, setShowPlacas] = useState(false) // estado para el submenú

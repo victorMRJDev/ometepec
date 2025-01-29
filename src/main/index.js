@@ -1,9 +1,21 @@
 import { app, shell, BrowserWindow, ipcMain, protocol } from 'electron'
+
+// import {
+//   app,
+//   BrowserWindow,
+//   shell,
+//   ipcMain,
+//   BrowserWindowConstructorOptions as WindowOptions
+// } from 'electron'
+
+// import { createFileRoute, createURLRoute } from 'electron-router-dom'
+
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 // import icon from '../../resources/icon.png?asset'
 import icon from '../../resources/icon.jpg?asset'
 const path = require('path')
+// import {createFileRoute, createFileRoute} from 'electron-router-dom'
 // const fs = require('fs')
 const pool = require('../../db')
 const sharp = require('sharp')
@@ -14,11 +26,18 @@ import fs from 'fs/promises'
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
+    // width: 900,
+    // height: 670,
+    // titleBarStyle: 'hiddenInset',
+    // autoHideMenuBar: true,
     width: 900,
     height: 670,
-    titleBarStyle: 'hiddenInset',
-    // show: false,
-    autoHideMenuBar: true,
+    show: false, // 🔹 Oculta la ventana hasta que esté lista (para evitar parpadeos)
+    autoHideMenuBar: true, // 🔹 Oculta la barra de menú
+    titleBarStyle: 'default', // 🔹 Mantiene la barra de título con los botones de minimizar, maximizar y cerrar
+    fullscreenable: true, // 🔹 Permite que el usuario active/desactive fullscreen
+    maximizable: true, // 🔹 Permite maximizar la ventana
+    resizable: true, // 🔹 Permite cambiar el tamaño de la ventana
     titleBarOverlay: {
       color: '#ffffff',
       symbolColor: '#ab0033',
@@ -32,20 +51,32 @@ function createWindow() {
       sandbox: false,
       nodeIntegration: true
     }
+
+    // ...WindowOptions
   })
 
-  
+  // const devServerURL = createURLRoute(process.env['ELECTRON_RENDERER_URL'], id)
+
+  // const fileRoute = createFileRoute(join(__dirname, '../renderer/index.html'), id)
+
+  // process.env.NODE_ENV === 'development'
+  //   ? window.loadURL(devServerURL)
+  //   : window.loadFile(...fileRoute)
+  // const fileRoute = createFileRoute(join(__dirname, '../renderer/index.html'));
+  // process.env.NODE_ENV === 'development' ? window.loadURL(devServerURL) : window.loadFile(...fileRoute);
+
   mainWindow.setIcon(icon)
-  
+
   mainWindow.on('ready-to-show', () => {
+    mainWindow.maximize();
     mainWindow.show()
   })
-  
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
-  
+
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -57,6 +88,7 @@ function createWindow() {
   // if (!app.isPackaged) {
   //   mainWindow.webContents.openDevTools();
   // }
+  // return window
 }
 
 // This method will be called when Electron has finished
@@ -134,8 +166,8 @@ app.whenReady().then(() => {
       const sql = `
      INSERT INTO placas (
        folioUnico, fechaExpedicion, fechaVencimiento, numSerie, numMotor, marca, yearModelo,
-        color, rfcSolicitante, domicilio, nombres, apellidoPaterno, apellidoMaterno, importe, status
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        color, rfcSolicitante, domicilio, nombres, apellidoPaterno, apellidoMaterno, importe, status, rutaIne, rutaEstSanguineo, rutaConstSitFiscal
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    `
       const values = [
         permisoStore.folioUnico,
@@ -152,7 +184,10 @@ app.whenReady().then(() => {
         permisoStore.apellidoPaterno,
         permisoStore.apellidoMaterno,
         permisoStore.importe,
-        permisoStore.status
+        permisoStore.status,
+        permisoStore.rutaIne,
+        permisoStore.rutaEstSanguineo,
+        permisoStore.rutaConstSitFiscal
       ]
 
       const [rows, fields] = await connection.execute(sql, values)
@@ -286,124 +321,117 @@ app.whenReady().then(() => {
   )
 
   ipcMain.handle('insert-licencia', async (event, licencia) => {
-    // const sftp = new SftpClient()
-
     try {
-      // await sftp.connect({
-      //   host:'192.168.0.117',
-      //   port: port || 22,
-      //   username: 'OmeTeam',
-      //   password: 'Ome1234'
-      // })
+      // let fotoPath = null
+      // let fotoFirm = null
 
-      let fotoPath = null
-      let fotoFirm = null
+      // if (licencia.fotografia) {
+      //   const mimeMatch = licencia.fotografia.match(/^data:(image\/\w+);base64,/)
+      //   if (mimeMatch && ['image/jpeg', 'image/png'].includes(mimeMatch[1])) {
+      //     const mimeType = mimeMatch[1]
+      //     const extension = mimeType.split('/')[1]
 
-      if (licencia.fotografia) {
-        const mimeMatch = licencia.fotografia.match(/^data:(image\/\w+);base64,/)
-        if (mimeMatch && ['image/jpeg', 'image/png'].includes(mimeMatch[1])) {
-          const mimeType = mimeMatch[1]
-          const extension = mimeType.split('/')[1]
+      //     // Validar y sanitizar la CURP
+      //     const curp = licencia.curp.toUpperCase().trim()
+      //     const sanitizedCurp = curp.replace(/[^A-Z0-9]/g, '')
 
-          // Validar y sanitizar la CURP
-          const curp = licencia.curp.toUpperCase().trim()
-          const sanitizedCurp = curp.replace(/[^A-Z0-9]/g, '')
+      //     // Nombre de archivo basado en CURP
+      //     const uniqueName = `${sanitizedCurp}.${extension}`
+      //     fotoPath = path.join(imageDir, uniqueName)
 
-          // Nombre de archivo basado en CURP
-          const uniqueName = `${sanitizedCurp}.${extension}`
-          fotoPath = path.join(imageDir, uniqueName)
+      //     const buffer = Buffer.from(
+      //       licencia.fotografia.replace(/^data:image\/\w+;base64,/, ''),
+      //       'base64'
+      //     )
 
-          const buffer = Buffer.from(
-            licencia.fotografia.replace(/^data:image\/\w+;base64,/, ''),
-            'base64'
-          )
+      //     // Optimizar la imagen
+      //     const optimizedBuffer = await sharp(buffer)
+      //       .resize(300, 300) // Ajusta según tus necesidades
+      //       .toFormat(extension)
+      //       .toBuffer()
 
-          // Optimizar la imagen
-          const optimizedBuffer = await sharp(buffer)
-            .resize(300, 300) // Ajusta según tus necesidades
-            .toFormat(extension)
-            .toBuffer()
+      //     // Guardar la imagen en el sistema de archivos
+      //     await fs.writeFile(fotoPath, optimizedBuffer)
+      //     // const fotoPathNormalized = fotoPath.replace(/\\/g, '/')
+      //     // fotoUrl = `file:///${fotoPathNormalized}`
+      //   } else {
+      //     throw new Error('Tipo de archivo de fotografía no permitido.')
+      //   }
+      // }
 
-          // Guardar la imagen en el sistema de archivos
-          await fs.writeFile(fotoPath, optimizedBuffer)
-          // const fotoPathNormalized = fotoPath.replace(/\\/g, '/')
-          // fotoUrl = `file:///${fotoPathNormalized}`
-        } else {
-          throw new Error('Tipo de archivo de fotografía no permitido.')
-        }
-      }
+      // if (licencia.firma) {
+      //   const mimeMatchFirm = licencia.firma.match(/^data:(image\/\w+);base64,/)
+      //   if (mimeMatchFirm && ['image/png', 'image/jpeg'].includes(mimeMatchFirm[1])) {
+      //     const mimeTypeFirm = mimeMatchFirm[1]
+      //     const extensionFirm = mimeTypeFirm.split('/')[1]
 
-      if (licencia.firma) {
-        const mimeMatchFirm = licencia.firma.match(/^data:(image\/\w+);base64,/)
-        if (mimeMatchFirm && ['image/png', 'image/jpeg'].includes(mimeMatchFirm[1])) {
-          const mimeTypeFirm = mimeMatchFirm[1]
-          const extensionFirm = mimeTypeFirm.split('/')[1]
+      //     // Validar y sanitizar la CURP
+      //     const curpF = licencia.curp.toUpperCase().trim()
+      //     const sanitizedCurpF = curpF.replace(/[^A-Z0-9]/g, '')
 
-          // Validar y sanitizar la CURP
-          const curpF = licencia.curp.toUpperCase().trim()
-          const sanitizedCurpF = curpF.replace(/[^A-Z0-9]/g, '')
+      //     // Nombre de archivo basado en CURP
+      //     const uniqueNameFirm = `${sanitizedCurpF}.${extensionFirm}`
+      //     fotoFirm = path.join(imageDirFirmas, uniqueNameFirm)
 
-          // Nombre de archivo basado en CURP
-          const uniqueNameFirm = `${sanitizedCurpF}.${extensionFirm}`
-          fotoFirm = path.join(imageDirFirmas, uniqueNameFirm)
+      //     const bufferFirm = Buffer.from(
+      //       licencia.firma.replace(/^data:image\/\w+;base64,/, ''),
+      //       'base64'
+      //     )
 
-          const bufferFirm = Buffer.from(
-            licencia.firma.replace(/^data:image\/\w+;base64,/, ''),
-            'base64'
-          )
+      //     // Optimizar la imagen
+      //     const optimizedBufferFirm = await sharp(bufferFirm)
+      //       // .resize(400, 150) // Ajusta según tus necesidades
+      //       .toFormat(extensionFirm)
+      //       .toBuffer()
 
-          // Optimizar la imagen
-          const optimizedBufferFirm = await sharp(bufferFirm)
-            // .resize(400, 150) // Ajusta según tus necesidades
-            .toFormat(extensionFirm)
-            .toBuffer()
+      //     // Guardar la imagen en el sistema de archivos
+      //     await fs.writeFile(fotoFirm, optimizedBufferFirm)
+      //     // const fotoPathNormalized = fotoPath.replace(/\\/g, '/')
+      //     // fotoUrl = `file:///${fotoPathNormalized}`
+      //   } else {
+      //     throw new Error('Tipo de archivo de firma no permitido.')
+      //   }
+      // }
 
-          // Guardar la imagen en el sistema de archivos
-          await fs.writeFile(fotoFirm, optimizedBufferFirm)
-          // const fotoPathNormalized = fotoPath.replace(/\\/g, '/')
-          // fotoUrl = `file:///${fotoPathNormalized}`
-        } else {
-          throw new Error('Tipo de archivo de firma no permitido.')
-        }
-      }
-
-      // Modificar la licencia para almacenar la ruta de la fotografía
-      const licenciaToStore = { ...licencia, fotografia: fotoPath, firma: fotoFirm }
+      // // Modificar la licencia para almacenar la ruta de la fotografía
+      // const licenciaToStore = { ...licencia, fotografia: fotoPath, firma: fotoFirm }
       // Insertar en MySQL
       const sql = `
      INSERT INTO licencias (
        nombres, apellidoPaterno, apellidoMaterno, telefono, sexo, fechaNacimiento,
        curp, rfc, tipoSangre, alergias, domicilio, contactoEmergencia, donadorOrganos, restricMedica, status, fotografia,
-       firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, idPersona, costo, tipoTramite, duracion
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, idPersona, costo, tipoTramite, duracion, rutaIne, rutaEstSanguineo
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    `
       const values = [
-        licenciaToStore.nombres,
-        licenciaToStore.apellidoPaterno,
-        licenciaToStore.apellidoMaterno,
-        licenciaToStore.telefono,
-        licenciaToStore.sexo,
-        licenciaToStore.fechaNacimiento,
-        licenciaToStore.curp,
-        licenciaToStore.rfc,
-        licenciaToStore.tipoSangre,
-        licenciaToStore.alergias,
-        licenciaToStore.domicilio,
-        licenciaToStore.contactoEmergencia,
-        licenciaToStore.donadorOrganos,
-        licenciaToStore.restricMedica,
-        licenciaToStore.status,
-        licenciaToStore.fotografia, // Ruta del archivo
-        licenciaToStore.firma,
-        licenciaToStore.fechaExpedicion || null,
-        licenciaToStore.fechaVencimiento || null,
-        licenciaToStore.licenciaDe || null,
-        licenciaToStore.tipoLicencia || null,
-        licenciaToStore.numLicencia || null,
-        licenciaToStore.idPersona || null,
-        licenciaToStore.costo || null,
-        licenciaToStore.tipoTramite || null,
-        licenciaToStore.duracion || null
+        licencia.nombres,
+        licencia.apellidoPaterno,
+        licencia.apellidoMaterno,
+        licencia.telefono,
+        licencia.sexo,
+        licencia.fechaNacimiento,
+        licencia.curp,
+        licencia.rfc,
+        licencia.tipoSangre,
+        licencia.alergias,
+        licencia.domicilio,
+        licencia.contactoEmergencia,
+        licencia.donadorOrganos,
+        licencia.restricMedica,
+        licencia.status,
+        licencia.fotografia, // Ruta del archivo
+        licencia.firma,
+        licencia.fechaExpedicion || null,
+        licencia.fechaVencimiento || null,
+        licencia.licenciaDe || null,
+        licencia.tipoLicencia || null,
+        licencia.numLicencia || null,
+        licencia.idPersona || null,
+        licencia.costo || null,
+        licencia.tipoTramite || null,
+        licencia.duracion || null,
+        licencia.rutaIne || null,
+        licencia.rutaEstSanguineo || null
       ]
 
       const [rows, fields] = await pool.execute(sql, values)
@@ -418,6 +446,8 @@ app.whenReady().then(() => {
   })
   let rutasRelativaFotografia = ''
   let rutasRelativaFirma = ''
+  let rutaReltIne = ''
+  let rutaReltEstSanguineo = ''
 
   ipcMain.handle('get-licencias', async () => {
     try {
@@ -425,17 +455,21 @@ app.whenReady().then(() => {
       SELECT id, nombres, apellidoPaterno, apellidoMaterno, telefono, sexo, fechaNacimiento,
              curp, rfc, tipoSangre, alergias, domicilio,
              contactoEmergencia, donadorOrganos, restricMedica, status, fotografia,
-             created_at, updated_at, firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, costo, tipoTramite, duracion
+             created_at, updated_at, firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, costo, tipoTramite, duracion, rutaIne, rutaEstSanguineo
       FROM licencias`
       const [rows, fields] = await pool.execute(sql)
 
       const processedRows = await Promise.all(
         rows.map(async (row) => {
+
+          rutasRelativaFotografia = row.fotografia
+          rutasRelativaFirma = row.firma
+          rutaReltIne = row.rutaIne
+          rutaReltEstSanguineo = row.rutaEstSanguineo
           // if (row.fotografia && fs.existsSync(row.fotografia)) {
           if (row.fotografia && (await fs.stat(row.fotografia).catch(() => false))) {
-            // console.log('Ruta de la fotografia:', row.fotografia)
+            console.log('Ruta de la fotografia:', row.fotografia)
 
-            rutasRelativaFotografia = row.fotografia
             // const imageBuffer = fs.readFileSync(row.fotografia)
             const imageBuffer = await fs.readFile(row.fotografia)
             const mimeType =
@@ -448,8 +482,7 @@ app.whenReady().then(() => {
 
           // if (row.firma && fs.existsSync(row.firma)) {
           if (row.firma && (await fs.stat(row.firma).catch(() => false))) {
-            // console.log('Ruta de la firma:', row.firma)
-            rutasRelativaFirma = row.firma
+            console.log('Ruta de la firma:', row.firma)
 
             // const firmaBuffer = fs.readFileSync(row.firma)
             const firmaBuffer = await fs.readFile(row.firma)
@@ -477,7 +510,9 @@ app.whenReady().then(() => {
       const licenciaToStoreGenerated = {
         ...licenciaCompleta,
         fotografia: rutasRelativaFotografia,
-        firma: rutasRelativaFirma
+        firma: rutasRelativaFirma,
+        rutaIne: rutaReltIne,
+        rutaEstSanguineo: rutaReltEstSanguineo
       }
       console.log('LICENCIA TO STORE:', licenciaToStoreGenerated)
 
@@ -486,8 +521,8 @@ app.whenReady().then(() => {
      INSERT INTO licenciasgeneradas (
        nombres, apellidoPaterno, apellidoMaterno, telefono, sexo, fechaNacimiento,
        curp, rfc, tipoSangre, alergias, domicilio, contactoEmergencia, donadorOrganos, restricMedica, status, fotografia,
-       firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, idPersona, costo, tipoTramite, duracion
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, idPersona, costo, tipoTramite, duracion, rutaIne, rutaEstSanguineo
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    `
       const values = [
         licenciaToStoreGenerated.nombres,
@@ -515,7 +550,9 @@ app.whenReady().then(() => {
         licenciaToStoreGenerated.idPersona,
         licenciaToStoreGenerated.costo,
         licenciaToStoreGenerated.tipoTramite,
-        licenciaToStoreGenerated.duracion
+        licenciaToStoreGenerated.duracion,
+        licenciaToStoreGenerated.rutaIne,
+        licenciaToStoreGenerated.rutaEstSanguineo
       ]
 
       const [rows, fields] = await pool.execute(sql, values)
@@ -589,20 +626,11 @@ app.whenReady().then(() => {
   createWindow()
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
-
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.

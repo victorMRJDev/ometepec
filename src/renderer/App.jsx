@@ -1,11 +1,11 @@
-import 'semantic-ui-css/semantic.min.css'
+// import 'semantic-ui-css/semantic.min.css'
 import React, { useState } from 'react'
 import { UserProvider, useUser } from './hooks/UserContext'
-import Sidebar from './components/sidebar/SideBar'
+// import Sidebar from './components/sidebar/SideBar'
 import LoggedNavigation from './routes/LoggedNavigation'
 import Home from './screens/Home'
 
-import './index.css'
+// import './index.css'
 
 function AppContent() {
   const { user } = useUser()

@@ -25,7 +25,9 @@ const AddLicencia = () => {
     fechaVencimiento: '',
     licenciaDe: '',
     tipoLicencia: '',
-    numLicencia: ''
+    numLicencia: '',
+    rutaIne: '',
+    rutaEstSanguineo: ''
   })
 
   const [isCameraActive, setIsCameraActive] = useState(false)
@@ -133,6 +135,26 @@ const AddLicencia = () => {
     setFormData((prev) => ({ ...prev, firma: signatureDataURL }))
   }, [])
 
+  const [pdf1, setPdf1] = useState(null)
+  const [pdf2, setPdf2] = useState(null)
+
+  const pdf1Ref = useRef(null)
+  const pdf2Ref = useRef(null)
+  const [imagePhoto, setImagePhoto] = useState(null)
+  const [imageFirma, setImageFirma] = useState(null)
+
+  function dataURLtoFile(dataURL, fileName) {
+    const arr = dataURL.split(',')
+    const mime = arr[0].match(/:(.*?);/)[1]
+    const bstr = atob(arr[1])
+    let n = bstr.length
+    const u8arr = new Uint8Array(n)
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n)
+    }
+    return new File([u8arr], fileName, { type: mime })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -145,7 +167,38 @@ const AddLicencia = () => {
     const licenciaData = { ...formData }
 
     try {
-      const response = await window.api.insertLicencia(licenciaData)
+      const fotoBlob = dataURLtoFile(formData.fotografia, 'fotografia.png')
+      const firmaBlob = dataURLtoFile(formData.firma, 'firma.png')
+
+      const uploadDataPersona = new FormData()
+
+      uploadDataPersona.append('tipo', 'persona')
+      uploadDataPersona.append('identificador', formData.curp)
+
+      if (pdf1) uploadDataPersona.append('pdfs', pdf1)
+      if (pdf2) uploadDataPersona.append('pdfs', pdf2)
+      uploadDataPersona.append('images', fotoBlob)
+      uploadDataPersona.append('images', firmaBlob)
+
+      const uploadResponse = await fetch('http://192.168.0.109:3000/subir', {
+        method: 'POST',
+        body: uploadDataPersona
+      })
+
+      const data = await uploadResponse.json()
+
+      const archivos = data.archivos
+
+      const updateFormData = {
+        ...formData,
+        rutaIne: archivos[0]?.rutaCompleta || '',
+        rutaEstSanguineo: archivos[1]?.rutaCompleta || '',
+        fotografia: archivos[2]?.rutaCompleta || '',
+        firma: archivos[3]?.rutaCompleta || '',
+
+      }
+
+      const response = await window.api.insertLicencia(updateFormData)
       if (response.success) {
         alert('Licencia registrada exitosamente. ID: ' + response.id)
         setFormData({
@@ -170,9 +223,15 @@ const AddLicencia = () => {
           fechaVencimiento: '' || null,
           licenciaDe: '' || null,
           tipoLicencia: '' || null,
-          numLicencia: '' || null
+          numLicencia: '' || null,
+          rutaIne: '',
+          rutaEstSanguineo: ''
         })
         handleClearSignature()
+        if (pdf1Ref.current) pdf1Ref.current.value = ''
+        if (pdf2Ref.current) pdf2Ref.current.value = ''
+        setPdf1(null)
+        setPdf2(null)
       } else {
         console.log('Error al registrar la licencia: ' + response.error)
         // alert('Error al registrar la licencia: ' + response.error)
@@ -186,7 +245,7 @@ const AddLicencia = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 py-4 px-2">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 py-4 px-2 overflow-auto max-h-screen overflow-y-auto">
       <Form
         onSubmit={handleSubmit}
         className="flex flex-col md:flex-row gap-6 bg-white w-full max-w-7xl p-6 rounded-lg shadow-lg"
@@ -400,6 +459,25 @@ const AddLicencia = () => {
               value={formData.restricMedica}
               onChange={handleChange}
               fluid
+            />
+          </div>
+          {/* Campos para subir los 4 archivos PDF */}
+          <div className="flex flex-col gap-1">
+            <label className="font-calibri-bold">Seleccione PDF del INE</label>
+            <Form.Input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setPdf1(e.target.files[0])}
+              ref={pdf1Ref}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="font-calibri-bold">Seleccione PDF del Estudio Sanguíneo</label>
+            <Form.Input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setPdf2(e.target.files[0])}
+              ref={pdf2Ref}
             />
           </div>
         </div>
