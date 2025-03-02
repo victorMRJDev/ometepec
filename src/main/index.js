@@ -1,35 +1,14 @@
 import { app, shell, BrowserWindow, ipcMain, protocol } from 'electron'
-
-// import {
-//   app,
-//   BrowserWindow,
-//   shell,
-//   ipcMain,
-//   BrowserWindowConstructorOptions as WindowOptions
-// } from 'electron'
-
-// import { createFileRoute, createURLRoute } from 'electron-router-dom'
-
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-// import icon from '../../resources/icon.png?asset'
-import icon from '../../resources/icon.jpg?asset'
+import icon from '../../resources/icon.png?asset'
 const path = require('path')
-// import {createFileRoute, createFileRoute} from 'electron-router-dom'
-// const fs = require('fs')
 const pool = require('../../db')
 const sharp = require('sharp')
 import fs from 'fs/promises'
-// const PDFDocument = require('pdfkit')
-// const SftpClient = require('ssh2-sftp-client')
 
 function createWindow() {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
-    // width: 900,
-    // height: 670,
-    // titleBarStyle: 'hiddenInset',
-    // autoHideMenuBar: true,
     width: 900,
     height: 670,
     show: false, // 🔹 Oculta la ventana hasta que esté lista (para evitar parpadeos)
@@ -55,21 +34,16 @@ function createWindow() {
     // ...WindowOptions
   })
 
-  // const devServerURL = createURLRoute(process.env['ELECTRON_RENDERER_URL'], id)
-
-  // const fileRoute = createFileRoute(join(__dirname, '../renderer/index.html'), id)
-
-  // process.env.NODE_ENV === 'development'
-  //   ? window.loadURL(devServerURL)
-  //   : window.loadFile(...fileRoute)
-  // const fileRoute = createFileRoute(join(__dirname, '../renderer/index.html'));
-  // process.env.NODE_ENV === 'development' ? window.loadURL(devServerURL) : window.loadFile(...fileRoute);
-
   mainWindow.setIcon(icon)
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.maximize();
+    mainWindow.maximize()
     mainWindow.show()
+
+    // if (!is.dev) {
+    //   mainWindow.webContents.openDevTools()
+    // }
+    // mainWindow.webContents.openDevTools({ mode: 'detach' })
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -77,45 +51,20 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
-  // mainWindow.webContents.openDevTools();
-  // if (!app.isPackaged) {
-  //   mainWindow.webContents.openDevTools();
-  // }
-  // return window
 }
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
-
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
   const imageDir = path.join(app.getAppPath('../fotografias'), 'fotografias')
   const imageDirFirmas = path.join(app.getAppPath('../firmas'), 'firmas')
-
-  // if (!fs.existsSync(imageDir)) {
-  //   fs.mkdirSync(imageDir, { recursive: true })
-  // }
-  // const imageDirStat = await fs.stat(imageDir).catch(() => false)
-  // if (!imageDirStat) {
-  //   await fs.mkdir(imageDir, { recursive: true })
-  // }
-
   // IPC
 
   ipcMain.handle('login', async (event, { correo, password }) => {
@@ -166,8 +115,8 @@ app.whenReady().then(() => {
       const sql = `
      INSERT INTO placas (
        folioUnico, fechaExpedicion, fechaVencimiento, numSerie, numMotor, marca, yearModelo,
-        color, rfcSolicitante, domicilio, nombres, apellidoPaterno, apellidoMaterno, importe, status, rutaIne, rutaEstSanguineo, rutaConstSitFiscal
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        color, rfcSolicitante, domicilio, nombres, apellidoPaterno, apellidoMaterno, importe, status, rutaIne, rutaEstSanguineo, rutaConstSitFiscal, idUser
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    `
       const values = [
         permisoStore.folioUnico,
@@ -187,7 +136,8 @@ app.whenReady().then(() => {
         permisoStore.status,
         permisoStore.rutaIne,
         permisoStore.rutaEstSanguineo,
-        permisoStore.rutaConstSitFiscal
+        permisoStore.rutaConstSitFiscal,
+        permisoStore.idUser
       ]
 
       const [rows, fields] = await connection.execute(sql, values)
@@ -283,8 +233,11 @@ app.whenReady().then(() => {
         tipoLicencia,
         idPersona,
         costo,
+        descPorcentaje,
+        costoFinal,
         tipoTramite,
-        duracion
+        duracion,
+        responsable
       }
     ) => {
       if (!id) {
@@ -295,7 +248,7 @@ app.whenReady().then(() => {
         await connection.beginTransaction() // Iniciar transacción
 
         // Actualiza la licencia con numLicencia
-        const updateQuery = `UPDATE licencias SET status=?, fechaExpedicion = ?, fechaVencimiento=?, licenciaDe=?,tipoLicencia=?, idPersona=?, costo=?, tipoTramite=?,duracion=?  WHERE id = ?`
+        const updateQuery = `UPDATE licencias SET status=?, fechaExpedicion = ?, fechaVencimiento=?, licenciaDe=?,tipoLicencia=?, idPersona=?, costo=?, descPorcentaje=?, costoFinal=?, tipoTramite=?,duracion=?, responsable=?  WHERE id = ?`
         await connection.execute(updateQuery, [
           status,
           fechaExpedicion,
@@ -304,8 +257,11 @@ app.whenReady().then(() => {
           tipoLicencia,
           idPersona,
           costo,
+          descPorcentaje,
+          costoFinal,
           tipoTramite,
           duracion,
+          responsable,
           id
         ])
 
@@ -322,86 +278,13 @@ app.whenReady().then(() => {
 
   ipcMain.handle('insert-licencia', async (event, licencia) => {
     try {
-      // let fotoPath = null
-      // let fotoFirm = null
-
-      // if (licencia.fotografia) {
-      //   const mimeMatch = licencia.fotografia.match(/^data:(image\/\w+);base64,/)
-      //   if (mimeMatch && ['image/jpeg', 'image/png'].includes(mimeMatch[1])) {
-      //     const mimeType = mimeMatch[1]
-      //     const extension = mimeType.split('/')[1]
-
-      //     // Validar y sanitizar la CURP
-      //     const curp = licencia.curp.toUpperCase().trim()
-      //     const sanitizedCurp = curp.replace(/[^A-Z0-9]/g, '')
-
-      //     // Nombre de archivo basado en CURP
-      //     const uniqueName = `${sanitizedCurp}.${extension}`
-      //     fotoPath = path.join(imageDir, uniqueName)
-
-      //     const buffer = Buffer.from(
-      //       licencia.fotografia.replace(/^data:image\/\w+;base64,/, ''),
-      //       'base64'
-      //     )
-
-      //     // Optimizar la imagen
-      //     const optimizedBuffer = await sharp(buffer)
-      //       .resize(300, 300) // Ajusta según tus necesidades
-      //       .toFormat(extension)
-      //       .toBuffer()
-
-      //     // Guardar la imagen en el sistema de archivos
-      //     await fs.writeFile(fotoPath, optimizedBuffer)
-      //     // const fotoPathNormalized = fotoPath.replace(/\\/g, '/')
-      //     // fotoUrl = `file:///${fotoPathNormalized}`
-      //   } else {
-      //     throw new Error('Tipo de archivo de fotografía no permitido.')
-      //   }
-      // }
-
-      // if (licencia.firma) {
-      //   const mimeMatchFirm = licencia.firma.match(/^data:(image\/\w+);base64,/)
-      //   if (mimeMatchFirm && ['image/png', 'image/jpeg'].includes(mimeMatchFirm[1])) {
-      //     const mimeTypeFirm = mimeMatchFirm[1]
-      //     const extensionFirm = mimeTypeFirm.split('/')[1]
-
-      //     // Validar y sanitizar la CURP
-      //     const curpF = licencia.curp.toUpperCase().trim()
-      //     const sanitizedCurpF = curpF.replace(/[^A-Z0-9]/g, '')
-
-      //     // Nombre de archivo basado en CURP
-      //     const uniqueNameFirm = `${sanitizedCurpF}.${extensionFirm}`
-      //     fotoFirm = path.join(imageDirFirmas, uniqueNameFirm)
-
-      //     const bufferFirm = Buffer.from(
-      //       licencia.firma.replace(/^data:image\/\w+;base64,/, ''),
-      //       'base64'
-      //     )
-
-      //     // Optimizar la imagen
-      //     const optimizedBufferFirm = await sharp(bufferFirm)
-      //       // .resize(400, 150) // Ajusta según tus necesidades
-      //       .toFormat(extensionFirm)
-      //       .toBuffer()
-
-      //     // Guardar la imagen en el sistema de archivos
-      //     await fs.writeFile(fotoFirm, optimizedBufferFirm)
-      //     // const fotoPathNormalized = fotoPath.replace(/\\/g, '/')
-      //     // fotoUrl = `file:///${fotoPathNormalized}`
-      //   } else {
-      //     throw new Error('Tipo de archivo de firma no permitido.')
-      //   }
-      // }
-
-      // // Modificar la licencia para almacenar la ruta de la fotografía
-      // const licenciaToStore = { ...licencia, fotografia: fotoPath, firma: fotoFirm }
-      // Insertar en MySQL
       const sql = `
      INSERT INTO licencias (
        nombres, apellidoPaterno, apellidoMaterno, telefono, sexo, fechaNacimiento,
        curp, rfc, tipoSangre, alergias, domicilio, contactoEmergencia, donadorOrganos, restricMedica, status, fotografia,
-       firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, idPersona, costo, tipoTramite, duracion, rutaIne, rutaEstSanguineo
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, idPersona, costo, tipoTramite, duracion, 
+       rutaIne, rutaEstSanguineo, condonacion, observacionCondona
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    `
       const values = [
         licencia.nombres,
@@ -431,7 +314,9 @@ app.whenReady().then(() => {
         licencia.tipoTramite || null,
         licencia.duracion || null,
         licencia.rutaIne || null,
-        licencia.rutaEstSanguineo || null
+        licencia.rutaEstSanguineo || null,
+        licencia.condonacion || null,
+        licencia.observacionCondona || null
       ]
 
       const [rows, fields] = await pool.execute(sql, values)
@@ -455,13 +340,13 @@ app.whenReady().then(() => {
       SELECT id, nombres, apellidoPaterno, apellidoMaterno, telefono, sexo, fechaNacimiento,
              curp, rfc, tipoSangre, alergias, domicilio,
              contactoEmergencia, donadorOrganos, restricMedica, status, fotografia,
-             created_at, updated_at, firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, costo, tipoTramite, duracion, rutaIne, rutaEstSanguineo
+             created_at, updated_at, firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, costo, tipoTramite, 
+             duracion, rutaIne, rutaEstSanguineo, condonacion, observacionCondona, responsable
       FROM licencias`
       const [rows, fields] = await pool.execute(sql)
 
       const processedRows = await Promise.all(
         rows.map(async (row) => {
-
           rutasRelativaFotografia = row.fotografia
           rutasRelativaFirma = row.firma
           rutaReltIne = row.rutaIne
@@ -521,8 +406,9 @@ app.whenReady().then(() => {
      INSERT INTO licenciasgeneradas (
        nombres, apellidoPaterno, apellidoMaterno, telefono, sexo, fechaNacimiento,
        curp, rfc, tipoSangre, alergias, domicilio, contactoEmergencia, donadorOrganos, restricMedica, status, fotografia,
-       firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, idPersona, costo, tipoTramite, duracion, rutaIne, rutaEstSanguineo
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       firma, fechaExpedicion, fechaVencimiento, licenciaDe, tipoLicencia, numLicencia, idPersona, costo, descPorcentaje, costoFinal, tipoTramite, duracion, 
+       rutaIne, rutaEstSanguineo, condonacion, observacionCondona, responsable, idUsuario
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    `
       const values = [
         licenciaToStoreGenerated.nombres,
@@ -549,10 +435,16 @@ app.whenReady().then(() => {
         licenciaToStoreGenerated.numLicencia,
         licenciaToStoreGenerated.idPersona,
         licenciaToStoreGenerated.costo,
+        licenciaToStoreGenerated.descPorcentaje,
+        licenciaToStoreGenerated.costoFinal,
         licenciaToStoreGenerated.tipoTramite,
         licenciaToStoreGenerated.duracion,
         licenciaToStoreGenerated.rutaIne,
-        licenciaToStoreGenerated.rutaEstSanguineo
+        licenciaToStoreGenerated.rutaEstSanguineo,
+        licenciaToStoreGenerated.condonacion,
+        licenciaToStoreGenerated.observacionCondona,
+        licenciaToStoreGenerated.responsable,
+        licenciaToStoreGenerated.idUsuario
       ]
 
       const [rows, fields] = await pool.execute(sql, values)
@@ -566,9 +458,9 @@ app.whenReady().then(() => {
     }
   })
 
-  ipcMain.handle('insert-usersystem', async (event, user, currentUser) => {
+  ipcMain.handle('insert-usersystem', async (event, user) => {
     try {
-      if (currentUser.rolUsuario !== 'Administrador') {
+      if (user.rolUsuario !== 'administrador') {
         return {
           success: false,
           error: 'Acceso denegado: Solo los administradores pueden agregar usuarios.'
@@ -576,22 +468,23 @@ app.whenReady().then(() => {
       }
 
       const sql = `
-     INSERT INTO licencias (
-       nombre, apellidoPaterno, apellidoMaterno, curp, numEmpleado, rfc, edad, domicilio, genero, rolUsuario
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     INSERT INTO usuarios (
+       nombre, apellidoPaterno, apellidoMaterno, curp, numEmpleado, rfc, edad, domicilio, genero, rolUsuario, correo, password
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    `
       const values = [
-        licenciaToStore.nombre,
-        licenciaToStore.apellidoPaterno,
-        licenciaToStore.apellidoMaterno,
-        licenciaToStore.curp,
-        licenciaToStore.numEmpleado,
-        licenciaToStore.rfc,
-        licenciaToStore.edad,
-        licenciaToStore.rfc,
-        licenciaToStore.domicilio,
-        licenciaToStore.genero,
-        licenciaToStore.rolUsuario
+        user.nombre,
+        user.apellidoPaterno,
+        user.apellidoMaterno,
+        user.curp,
+        user.numEmpleado,
+        user.rfc,
+        user.edad,
+        user.domicilio,
+        user.genero,
+        user.rolUsuario,
+        user.correo,
+        user.password
       ]
 
       const [rows, fields] = await pool.execute(sql, values)
@@ -616,6 +509,33 @@ app.whenReady().then(() => {
 
       // return rows;
 
+      return { success: true, data: rows }
+    } catch (error) {
+      console.error('Error al obtener licencias:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  ipcMain.handle('get-licenciasGeneradas', async (event, startDate, endDate) => {
+    try {
+      const sql = `
+       SELECT 
+  l.numLicencia AS NumeroLicencia,
+  CONCAT(l.nombres, ' ', l.apellidoPaterno, ' ', l.apellidoMaterno) AS Nombre,
+  l.fechaExpedicion AS FechaExpedicion,
+  CONCAT(u.nombre, ' ', u.apellidoPaterno, ' ', u.apellidoMaterno) AS ExpedidaPor,
+  l.condonacion AS Condonacion,
+  l.observacionCondona AS Observacion,
+  l.costo AS Costo
+FROM licenciasgeneradas AS l
+JOIN usuarios AS u ON l.idUsuario = u.id
+WHERE l.fechaExpedicion BETWEEN ? AND ?;
+    `
+
+      // Ejecutamos la consulta usando los parámetros de fecha.
+      const [rows] = await pool.execute(sql, [startDate, endDate])
+      console.log(rows)
+      console.log('Datos recibidos de la base:', rows)
       return { success: true, data: rows }
     } catch (error) {
       console.error('Error al obtener licencias:', error)

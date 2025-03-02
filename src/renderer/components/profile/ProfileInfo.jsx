@@ -10,10 +10,14 @@ const ProfileInfo = ({ dataInfo }) => {
         </h2>
         {
           <CardProfile
-            name={dataInfo.name}
-            rol={dataInfo.rol}
+            nombre={dataInfo.nombre}
+            apellidoPaterno={dataInfo.apellidoPaterno}
+            apellidoMaterno={dataInfo.apellidoMaterno}
+            correo={dataInfo.correo}
             numEmpleado={dataInfo.numEmpleado}
             curp={dataInfo.curp}
+            edad={dataInfo.edad}
+            rfc={dataInfo.rfc}
             // foto={request.foto}
           />
         }

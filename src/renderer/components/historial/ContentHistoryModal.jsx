@@ -322,8 +322,8 @@ const ContentHistoryModal = ({
                   name="fechaNacimiento"
                   type="date"
                   value={formData.fechaNacimiento}
-                //   disabled
-                readOnly
+                  //   disabled
+                  readOnly
                   onChange={handleChange}
                 />
               </div>
@@ -346,18 +346,20 @@ const ContentHistoryModal = ({
                 Licencia De:
               </label>
               <div className="relative">
-                <Select
-                  className="w-full font-kanit-medium text-xl pr-10"
-                  icon={null}
-                  placeholder="Selecciona de que es la licencia"
-                  options={licenciasDeOptions}
-                  disabled
-                  value={formData.licenciaDe}
-                  onChange={handleLicenciaDeChange}
+                <Form.Input
+                  // className="w-full font-kanit-medium text-xl pr-10"
+                  className="font-kanit-medium text-xl"
+                  // icon={null}
+                  // placeholder="Selecciona de que es la licencia"
+                  // options={licenciasDeOptions}
+                  // disabled
+                  readOnly
+                  value={formData.licenciaDe.toUpperCase()}
+                  // onChange={handleLicenciaDeChange}
                 />
-                <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
+                {/* <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
                   <Icon name="angle down" className="text-gray-600" />
-                </div>
+                </div> */}
               </div>
             </div>
             <div className="flex flex-col gap-1">
@@ -365,18 +367,19 @@ const ContentHistoryModal = ({
                 Tipo De Licencia:
               </label>
               <div className="relative">
-                <Select
-                  icon={null}
-                  className="w-full font-kanit-medium text-xl pr-10"
-                  placeholder="Tipo de licencia"
-                  options={tipoLicencias}
+                <Form.Input
+                  // icon={null}
+                  // className="w-full font-kanit-medium text-xl pr-10"
+                  // placeholder="Tipo de licencia"
+                  // options={tipoLicencias}
+                  className="font-kanit-medium text-xl"
                   value={formData.tipoLicencia}
-                  disabled
-                  onChange={handrleTipoLicencia}
+                  readOnly
+                  // onChange={handrleTipoLicencia}
                 />
-                <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
+                {/* <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
                   <Icon name="angle down" className="text-gray-600" />
-                </div>
+                </div> */}
               </div>
             </div>
             {(selectedLicenciaDe === 'automovilista' ||
@@ -449,14 +452,26 @@ const ContentHistoryModal = ({
               <label className="font-kanit-regular text-pantoneCoolGray11C text-2xl mb-1">
                 Fotografía del interesado
               </label>
-              <Image src={fotografia} className="object-contain max-w-full max-h-full" />
+
+              {/* <Image src={`http://192.168.1.64:3000/uploads/${fotografia}`} className="object-contain max-w-full max-h-full" /> */}
+              <Image
+                src={`http://192.168.1.64:3000/uploads/${fotografia}`}
+                // src={`http://192.168.0.109:3000/uploads/${fotografia}`}
+                className="object-contain max-w-full max-h-full"
+              />
             </div>
 
             <div className="flex flex-col w-10/12 bg-white h-2/6 items-center justify-center">
               <label className="font-kanit-regular text-pantoneCoolGray11C text-2xl mb-1">
                 Firma del interesado
               </label>
-              <Image src={firma} className="object-contain max-w-full max-h-full" />
+
+              {/* <Image src={`http://192.168.1.64:3000/uploads/${firma}`} className="object-contain max-w-full max-h-full" /> */}
+              <Image
+                src={`http://192.168.1.64:3000/uploads/${firma}`}
+                // src={`http://192.168.0.109:3000/uploads/${firma}`}
+                className="object-contain max-w-full max-h-full"
+              />
             </div>
 
             <div className="flex justify-center items-center w-10/12 bg-white">
@@ -478,4 +493,4 @@ const ContentHistoryModal = ({
   )
 }
 
-export default ContentHistoryModal;
+export default ContentHistoryModal

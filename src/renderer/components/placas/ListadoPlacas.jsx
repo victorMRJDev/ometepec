@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react'
-import CardPreview from './CardPreview'
+import React, { useState } from 'react'
+import CardPreviewPlacas from './CardPreviewPlacas'
 import { Icon, Input } from 'semantic-ui-react'
-import ModalBasic from './ModalBasic'
-import ContentHistoryModal from './ContentHistoryModal'
-import { useNavigate } from 'react-router-dom'
+import DetailHistoryPlacas from './DetailHistoryPlacas'
+import ModalBasic from '../historial/ModalBasic'
 
-const Listado = ({ requests }) => {
+const ListadoPlacas = ({ requests }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState({ title: '', data: null })
 
@@ -13,7 +12,6 @@ const Listado = ({ requests }) => {
   const [selectedRequest, setSelectedRequest] = useState(null)
 
   const [searchTerm, setSearchTerm] = useState('') // Estado para el término de búsqueda
-  const navigate = useNavigate()
 
   // function open modal
   const openModal = (title, data) => {
@@ -29,21 +27,21 @@ const Listado = ({ requests }) => {
     }
   }
 
-  const validatedRequests = requests.filter((request) => request.status === 'generado')
+  const validatedRequests = requests.filter((request) => request.status === 'Vigente')
 
   const filteredRequests = validatedRequests.filter((request) => {
     const fullName = `${request.nombres} ${request.apellidoPaterno} ${request.apellidoMaterno}`
-    const licenseNumber = request.numLicencia || ''
-    const licenseType = request.tipoLicencia || ''
-    const curp = request.curp || ''
+    const numSerie = request.numSerie || ''
+    const numMotor = request.numMotor || ''
+    const folioUnico = request.folioUnico || ''
 
     const term = searchTerm.toLowerCase()
 
     return (
       fullName.toLowerCase().includes(term) ||
-      licenseNumber.toLowerCase().includes(term) ||
-      licenseType.toLowerCase().includes(term) ||
-      curp.toLowerCase().includes(term)
+      numSerie.toLowerCase().includes(term) ||
+      numMotor.toLowerCase().includes(term) ||
+      folioUnico.toLowerCase().includes(term)
     )
   })
 
@@ -55,15 +53,15 @@ const Listado = ({ requests }) => {
     <>
       <div className="max-w-4xl mx-auto bg-white rounded-md shadow-lg overflow-auto max-h-screen">
         <h2 className="text-2xl font-encodesans-medium  text-gray-800 border-b p-6">
-          Historial de Licencias Generadas
+          Historial de Permisos Generados
         </h2>
         <div className="flex flex-col">
           <div className=" flex flex-row justify-between m-5">
-            <div>
+            {/* <div>
               <button className="ui red button" onClick={() => navigate('/generatereportlicenses')}>
-                Reporte de Licencias Generadas
+                Reporte de Placas generadas
               </button>{' '}
-            </div>
+            </div> */}
             <div>
               <Input
                 icon
@@ -82,12 +80,12 @@ const Listado = ({ requests }) => {
         </div>
         {filteredRequests.length > 0 ? (
           filteredRequests.map((request) => (
-            <CardPreview
+            <CardPreviewPlacas
               key={request.id}
-              name={request.nombres}
+              nombres={request.nombres}
               apellidoPaterno={request.apellidoPaterno}
               apellidoMaterno={request.apellidoMaterno}
-              date={request.fechaExpedicion}
+              fechaExpedicion={request.fechaExpedicion}
               status={request.status}
               onApprove={() =>
                 openModal('Detalle del archivo', {
@@ -95,28 +93,18 @@ const Listado = ({ requests }) => {
                   nombres: request.nombres,
                   apellidoPaterno: request.apellidoPaterno,
                   apellidoMaterno: request.apellidoMaterno,
-                  telefono: request.telefono,
-                  sexo: request.sexo,
-                  fechaNacimiento: request.fechaNacimiento,
-                  curp: request.curp,
-                  rfc: request.rfc,
-                  tipoSangre: request.tipoSangre,
-                  alergias: request.alergias,
-                  domicilio: request.domicilio,
-                  contactoEmergencia: request.contactoEmergencia,
-                  donadorOrganos: request.donadorOrganos,
-                  restricMedica: request.restricMedica,
-                  status: request.status,
-                  fotografia: request.fotografia,
-                  firma: request.firma,
                   fechaExpedicion: request.fechaExpedicion,
                   fechaVencimiento: request.fechaVencimiento,
-                  licenciaDe: request.licenciaDe,
-                  tipoLicencia: request.tipoLicencia,
-                  numLicencia: request.numLicencia,
-                  condonacion: request.condonacion,
-                  observacionCondona: request.observacionCondona,
-                  responsable: request.responsable,
+                  numSerie: request.numSerie,
+                  numMotor: request.numMotor,
+                  marca: request.marca,
+                  yearModelo: request.yearModelo,
+                  color: request.color,
+                  rfcSolicitante: request.rfcSolicitante,
+                  domicilio: request.domicilio,
+                  importe: request.importe,
+                  status: request.status,
+                  idUser: request.idUser
                 })
               }
               onReject={() =>
@@ -125,30 +113,18 @@ const Listado = ({ requests }) => {
                   nombres: request.nombres,
                   apellidoPaterno: request.apellidoPaterno,
                   apellidoMaterno: request.apellidoMaterno,
-                  telefono: request.telefono,
-                  sexo: request.sexo,
-                  fechaNacimiento: request.fechaNacimiento,
-                  curp: request.curp,
-                  rfc: request.rfc,
-                  tipoSangre: request.tipoSangre,
-                  alergias: request.alergias,
-                  domicilio: request.domicilio,
-                  contactoEmergencia: request.contactoEmergencia,
-                  donadorOrganos: request.donadorOrganos,
-                  restricMedica: request.restricMedica,
-                  status: request.status,
-                  fotografia: request.fotografia,
-                  created_at: request.created_at,
-                  updated_at: request.updated_at,
-                  firma: request.firma,
                   fechaExpedicion: request.fechaExpedicion,
                   fechaVencimiento: request.fechaVencimiento,
-                  licenciaDe: request.licenciaDe,
-                  tipoLicencia: request.tipoLicencia,
-                  numLicencia: request.numLicencia,
-                  condonacion: request.condonacion,
-                  observacionCondona: request.observacionCondona,
-                  responsable: request.responsable,
+                  numSerie: request.numSerie,
+                  numMotor: request.numMotor,
+                  marca: request.marca,
+                  yearModelo: request.yearModelo,
+                  color: request.color,
+                  rfcSolicitante: request.rfcSolicitante,
+                  domicilio: request.domicilio,
+                  importe: request.importe,
+                  status: request.status,
+                  idUser: request.idUser
                 })
               }
             />
@@ -164,17 +140,10 @@ const Listado = ({ requests }) => {
         onClose={closeModal}
         title={modalContent.title}
         size="large"
-        children={modalContent.data && <ContentHistoryModal {...modalContent.data} />}
+        children={modalContent.data && <DetailHistoryPlacas {...modalContent.data} />}
       />
-
-      {/* <LicenseModal
-            open={isLicenseModalOpen}
-            onClose={closeLicenseModal}
-            request={selectedRequest}
-            onDataChange={onDataChange}
-          /> */}
     </>
   )
 }
 
-export default Listado
+export default ListadoPlacas

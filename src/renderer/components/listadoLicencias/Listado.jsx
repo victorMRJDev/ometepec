@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import LicenseRequest from './CardPeticion'
 import LicenseModal from '../modal/LicenseModal'
@@ -10,6 +10,10 @@ import { Icon, Input, Button } from 'semantic-ui-react'
 // Componente principal del listado
 const LicenseRequestList = ({ requests, onDataChange }) => {
   // Filtrar solo las peticiones con documentos validados
+
+  useEffect(() => {
+    console.log('RESPUESTA SOLICITUDES', requests)
+  })
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState({ title: '', data: null })
@@ -48,22 +52,51 @@ const LicenseRequestList = ({ requests, onDataChange }) => {
 
   // const validatedRequests = requests.filter((request) => request.status === 'generado')
   const validatedRequests = requests.filter(
-    (request) => request.status === 'generado' || request.status === 'aprobada'
+    (request) => request.status === 'aprobada' || request.status === 'generado'
   )
 
   const filteredRequests = validatedRequests.filter((request) => {
     const fullName = `${request.nombres} ${request.apellidoPaterno} ${request.apellidoMaterno}`
-    const licenseNumber = request.numLicencia
-    const licenseType = request.tipoLicencia
-    const curp = request.curp.toLowerCase()
+    const licenseNumber = request.numLicencia || ''
+    const licenseType = request.tipoLicencia || ''
+    const curp = request.curp || ''
+
+    const term = searchTerm.toLowerCase()
 
     return (
-      fullName.includes(searchTerm) ||
-      licenseNumber.includes(searchTerm) ||
-      licenseType.includes(searchTerm) ||
-      curp.includes(searchTerm)
+      fullName.toLowerCase().includes(term) ||
+      licenseNumber.toLowerCase().includes(term) ||
+      licenseType.toLowerCase().includes(term) ||
+      curp.toLowerCase().includes(term)
     )
   })
+
+  // const sortedRequests = filteredRequests.sort((a, b) => {
+  //   // Primero, ordenar por estado: "aprobada" primero, luego "generado"
+  //   if (a.status === 'aprobada' && b.status !== 'aprobada') {
+  //     return -1; // "a" viene antes que "b"
+  //   } else if (a.status !== 'aprobada' && b.status === 'aprobada') {
+  //     return 1; // "b" viene antes que "a"
+  //   } else {
+  //     // Si ambos tienen el mismo estado, ordenar por fecha (más reciente primero)
+  //     const dateA = new Date(a.fechaExpedicion);
+  //     const dateB = new Date(b.fechaExpedicion);
+  //     return dateB - dateA;
+  //   }
+  // });
+
+  const sortedRequests = filteredRequests.sort((a, b) => {
+    // Convertir las fechas a objetos Date para poder compararlas
+    const dateA = new Date(a.created_at);
+    const dateB = new Date(b.created_at);
+  
+    // Ordenar de más reciente a más antiguo
+    return dateB - dateA;
+  });
+  
+
+  // Ahora `sortedReques2ts` contiene los registros ordenados por fecha
+  console.log('ORDENADOS2', sortedRequests)
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value)
@@ -93,8 +126,8 @@ const LicenseRequestList = ({ requests, onDataChange }) => {
           </div>
           <div className="w-12/12 h-1 mt-6 mb-6 bg-pantone207C"></div>
         </div>
-        {filteredRequests.length > 0 ? (
-          filteredRequests.map((request) => (
+        {sortedRequests.length > 0 ? (
+          sortedRequests.map((request) => (
             <LicenseRequest
               key={request.id}
               name={request.nombres}
@@ -128,8 +161,13 @@ const LicenseRequestList = ({ requests, onDataChange }) => {
                   tipoLicencia: request.tipoLicencia,
                   numLicencia: request.numLicencia,
                   costo: request.costo,
+                  descPorcentaje: request.descPorcentaje,
+                  costoFinal: request.costoFinal,
                   tipoTramite: request.tipoTramite,
-                  duracion: request.duracion
+                  duracion: request.duracion,
+                  condonacion: request.condonacion,
+                  observacionCondona: request.observacionCondona,
+                  responsable: request.responsable
                 })
               }
               onReject={() =>
@@ -160,8 +198,13 @@ const LicenseRequestList = ({ requests, onDataChange }) => {
                   tipoLicencia: request.tipoLicencia,
                   numLicencia: request.numLicencia,
                   costo: request.costo,
+                  descPorcentaje: request.descPorcentaje,
+                  costoFinal: request.costoFinal,
                   tipoTramite: request.tipoTramite,
-                  duracion: request.duracion
+                  duracion: request.duracion,
+                  condonacion: request.condonacion,
+                  observacionCondona: request.observacionCondona,
+                  responsable: request.responsable
                 })
               }
             />

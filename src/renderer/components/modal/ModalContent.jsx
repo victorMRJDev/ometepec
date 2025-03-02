@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Button, Form, Input, Image, Select, Icon } from 'semantic-ui-react'
 // import { useUser } from '../../hooks/UserContext'
+import ModalMessages from '../../components/modal/ModalMessages'
+import { useUser } from '../../hooks/UserContext'
 
 import logo from '../../../assets/logos/logo_fRojo.jpg'
 
@@ -33,10 +35,15 @@ const ModalContent = ({
 
   idPersona,
   costo,
+  descPorcentaje,
+  costoFinal,
   tipoTramite,
   duracion,
   rutaIne,
-  rutaEstSanguineo
+  rutaEstSanguineo,
+  condonacion,
+  observacionCondona,
+  responsable
 }) => {
   const [formData, setFormData] = useState({
     id: '',
@@ -66,30 +73,28 @@ const ModalContent = ({
     numLicencia: '',
     idPersona: '',
     costo: '',
+    descPorcentaje: '0',
+    costoFinal: '',
     tipoTramite: '',
     duracion: '',
     rutaIne: '',
-    rutaEstSanguineo: ''
+    rutaEstSanguineo: '',
+    observacionCondona: '',
+    responsable: '',
+    idUsuario: ''
   })
 
-  // Estado para manejar el Dropdown principal (6 opciones)
   const [opcionTramite, setOpcionTramite] = useState('')
-  // Estado para manejar el Dropdown de duración (3 o 5 años) cuando aplique
-  // const [duracion, setDuracion] = useState('')
-  // Estado para manejar la categoría (Chofer, Automovilista, Motociclista, Duplicado) para "Por expedición o reposición"
   const [categoriaExpedicion, setCategoriaExpedicion] = useState('')
-  // Estado para el costo en UMAs
-  // const [costo, setCosto] = useState('')
-  // Estado para la fecha de vencimiento
   const [fechaVencimientoCalc, setFechaVencimientoCalc] = useState('')
-  // Estado para mensajes de éxito/error
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
+  const [showResponsable, setShowResponsable] = useState(false)
+
   const [selectedTipoLicencia, setSelectedTipoLicencia] = useState(tipoLicencia || '')
-  // const userId = user?.id
+  const userSystem = useUser()
 
   useEffect(() => {
-    // Inicializa el estado con los props recibidos
     setFormData({
       id: id || '',
       nombres: nombres || '',
@@ -118,13 +123,17 @@ const ModalContent = ({
       numLicencia: numLicencia || '',
       idPersona: id || '',
       costo: costo || '',
+      descPorcentaje: descPorcentaje || '',
+      costoFinal: costoFinal || '',
       tipoTramite: tipoTramite || '',
       duracion: duracion || '',
       rutaIne: rutaIne || '',
-      rutaEstSanguineo: rutaEstSanguineo || ''
+      rutaEstSanguineo: rutaEstSanguineo || '',
+      condonacion: condonacion || '',
+      observacionCondona: observacionCondona || '',
+      responsable: responsable || '',
+      idUsuario: userSystem.user.id || ''
     })
-
-
   }, [
     id,
     nombres,
@@ -153,14 +162,23 @@ const ModalContent = ({
     numLicencia,
     idPersona,
     costo,
+    descPorcentaje,
+    costoFinal,
     tipoTramite,
     duracion,
     rutaIne,
-    rutaEstSanguineo
+    rutaEstSanguineo,
+    condonacion,
+    observacionCondona,
+    responsable
   ])
+  const [isModalRegisterOpen, setIsModalRegisterOpen] = useState(false)
+  const [modalTypeRegister, setModalTypeRegister] = useState('success')
+  const [modalMesageRegister, setModalMessageRegister] = useState('')
 
   console.log(formData.firma)
   console.log(formData.fotografia)
+
   const opcionesTramite = [
     {
       key: 'serv-particular-1anio',
@@ -194,6 +212,14 @@ const ModalContent = ({
     }
   ]
 
+  const handleResponsableChange = (e, { value }) => {
+    setFormData((prev) => ({
+      ...prev,
+      responsable: value
+    }))
+    setShowResponsable('6meses-menores')
+  }
+
   const duracionOptions = [
     { key: '3', value: '3', text: '3 años' },
     { key: '5', value: '5', text: '5 años' }
@@ -213,7 +239,17 @@ const ModalContent = ({
     { key: 'e', value: 'E', text: 'E' },
     { key: 'f', value: 'F', text: 'F' }
   ]
-  // Función para calcular la fecha de vencimiento
+
+  const porcentDescuento = [
+    { key: '0', value: '0', text: '0%' },
+    { key: '10', value: '10', text: '10%' },
+    { key: '20', value: '20', text: '20%' },
+    { key: '30', value: '30', text: '30%' },
+    { key: '40', value: '40', text: '40%' },
+    { key: '50', value: '50', text: '50%' },
+    { key: '60', value: '60', text: '60%' },
+    { key: '70', value: '70', text: '70%' }
+  ]
   const calcularFechaVencimiento = (anios = 0, meses = 0, dias = 0) => {
     const hoy = new Date()
     if (anios) hoy.setFullYear(hoy.getFullYear() + anios)
@@ -227,6 +263,24 @@ const ModalContent = ({
     setFormData({ ...formData, [name]: value })
   }
 
+  const handleDescuentoChange = (e, { value }) => {
+    setFormData((prev) => ({
+      ...prev,
+      descPorcentaje: value
+    }))
+  }
+
+  useEffect(() => {
+    const costoNumber = parseFloat(formData.costo) || 0
+    const descuentoNumber = parseFloat(formData.descPorcentaje) || 0
+    const nvoCostoFinal = costoNumber - costoNumber * (descuentoNumber / 100)
+
+    setFormData((prev) => ({
+      ...prev,
+      costoFinal: nvoCostoFinal.toFixed(2)
+    }))
+  }, [formData.costo, formData.descPorcentaje])
+
   const handleOpcionTramiteChange = (_, { value }) => {
     setOpcionTramite(value)
 
@@ -234,16 +288,16 @@ const ModalContent = ({
       ...prev,
       tipoTramite: value,
       duracion: '',
-      licenciaDe: '',
-      costo: ''
+      licenciaDe: '' // costo: ''
     }))
+    setShowResponsable(value === '6meses-menores')
 
     setFechaVencimientoCalc('')
     switch (value) {
       case 'serv-particular-1anio':
         setFormData((prev) => ({
           ...prev,
-          costo: '120.97',
+          // costo: '120.97',
           duracion: '1 año'
         }))
         setFechaVencimientoCalc(calcularFechaVencimiento(1, 0, 0))
@@ -252,7 +306,7 @@ const ModalContent = ({
       case 'provisional-30dias':
         setFormData((prev) => ({
           ...prev,
-          costo: '85.65',
+          // costo: '85.65',
           duracion: '30 días'
         }))
         setFechaVencimientoCalc(calcularFechaVencimiento(0, 0, 30))
@@ -261,7 +315,7 @@ const ModalContent = ({
       case '6meses-menores':
         setFormData((prev) => ({
           ...prev,
-          costo: '334.84',
+          // costo: '334.84',
           duracion: '6 meses'
         }))
         setFechaVencimientoCalc(calcularFechaVencimiento(0, 6, 0))
@@ -270,7 +324,7 @@ const ModalContent = ({
       case 'maquinas-especializadas':
         setFormData((prev) => ({
           ...prev,
-          costo: '120.97',
+          // costo: '120.97',
           duracion: '1 año'
         }))
         setFechaVencimientoCalc(calcularFechaVencimiento(1, 0, 0))
@@ -290,20 +344,20 @@ const ModalContent = ({
 
     setFechaVencimientoCalc(calcularFechaVencimiento(parseInt(value, 10)))
 
-    if (formData.tipoTramite === 'serv-publico') {
-      const costoPublico = value === '3' ? '231.29' : '318.39'
-      setFormData((prev) => ({
-        ...prev,
-        costo: costoPublico
-      }))
-      return
-    }
+    // if (formData.tipoTramite === 'serv-publico') {
+    //   const costoPublico = value === '3' ? '231.29' : '318.39'
+    //   setFormData((prev) => ({
+    //     ...prev,
+    //     costo: costoPublico
+    //   }))
+    //   return
+    // }
 
-    if (formData.tipoTramite === 'expedicion-reposicion') {
-      if (formData.licenciaDe) {
-        calcularCostoExpedicion(value, formData.licenciaDe)
-      }
-    }
+    // if (formData.tipoTramite === 'expedicion-reposicion') {
+    //   if (formData.licenciaDe) {
+    //     calcularCostoExpedicion(value, formData.licenciaDe)
+    //   }
+    // }
   }
 
   const handleCategoriaExpedicionChange = (_, { value }) => {
@@ -311,14 +365,12 @@ const ModalContent = ({
       ...prev,
       licenciaDe: value
     }))
-    // Si ya tenemos duracion, recalculamos
-    if (formData.duracion) {
-      calcularCostoExpedicion(formData.duracion, value)
-    }
+    // if (formData.duracion) {
+    //   calcularCostoExpedicion(formData.duracion, value)
+    // }
   }
 
   const calcularCostoExpedicion = (dur, cat) => {
-    // Ejemplo de costos
     const costos3 = {
       chofer: '231.29',
       automovilista: '171.77',
@@ -344,7 +396,7 @@ const ModalContent = ({
       costo: costoCalculado
     }))
   }
-  // Generar número de licencia (ejemplo de tu lógica)
+
   const handleGenerarLicencia = async () => {
     try {
       if (!id) {
@@ -372,7 +424,6 @@ const ModalContent = ({
 
   const handleGuardar = async () => {
     try {
-      // Prepara la data final
       const finalData = {
         ...formData,
         fechaVencimiento: fechaVencimientoCalc,
@@ -381,9 +432,6 @@ const ModalContent = ({
 
       console.log('Datos a guardar', finalData)
       const result = await window.api.historyLicencia(finalData)
-      // const result = finalData
-      // console.log(result)
-
       console.log('Final data:', finalData)
       console.log('FormData data:', formData)
 
@@ -396,31 +444,36 @@ const ModalContent = ({
         finalData.tipoLicencia,
         finalData.idPersona,
         finalData.costo,
+        finalData.descPorcentaje,
+        finalData.costoFinal,
         finalData.tipoTramite,
-        finalData.duracion
+        finalData.duracion,
+        finalData.responsable
       )
 
       if (result.success) {
-        setError('')
-        setSuccess(`Licencia guardada exitosamente con ID: ${result.insertId}`)
+        setModalTypeRegister('success')
+        setModalMessageRegister('Licencia guardada exitosamente')
+        setIsModalRegisterOpen(true)
+        // setError('')
+        // setSuccess(`Licencia guardada exitosamente con ID: ${result.insertId}`)
       } else {
-        setError(`Error al guardar la licencia: ${result.error}`)
-        setSuccess('')
+        setModalTypeRegister('error')
+        setModalMessageRegister('Error al guardar la licencia')
+        setIsModalRegisterOpen(true)
       }
     } catch (err) {
       console.error('Error al guardar la licencia:', err)
-      setError('Error al guardar la licencia.')
-      setSuccess('')
+      setModalTypeRegister('error')
+      setModalMessageRegister('Error al guardar la licencia')
+      setIsModalRegisterOpen(true)
     }
   }
-
   return (
     <>
       <div className="flex flex-col h-auto">
         <Form className="flex flex-row bg-white gap-36 justify-center flex-grow">
-          {/* Columna Izquierda */}
           <div className="flex flex-col gap-3 w-5/12 bg-white">
-            {/* CURP */}
             <div className="flex flex-col gap-1">
               <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">CURP</label>
               <Form.Input
@@ -432,8 +485,6 @@ const ModalContent = ({
                 onChange={handleChange}
               />
             </div>
-
-            {/* Apellido Paterno */}
             <div className="flex flex-col gap-1">
               <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
                 Apellido Paterno
@@ -447,8 +498,6 @@ const ModalContent = ({
                 onChange={handleChange}
               />
             </div>
-
-            {/* Apellido Materno */}
             <div className="flex flex-col gap-1">
               <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
                 Apellido Materno
@@ -462,8 +511,6 @@ const ModalContent = ({
                 onChange={handleChange}
               />
             </div>
-
-            {/* Nombres */}
             <div className="flex flex-col gap-1">
               <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
                 Nombre
@@ -477,8 +524,6 @@ const ModalContent = ({
                 onChange={handleChange}
               />
             </div>
-
-            {/* Fecha Nacimiento */}
             <div className="flex flex-col gap-1">
               <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
                 Fecha de Nacimiento
@@ -492,8 +537,6 @@ const ModalContent = ({
                 onChange={handleChange}
               />
             </div>
-
-            {/* Fecha de Expedición (readOnly) */}
             <div className="flex flex-col gap-1">
               <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
                 Fecha de Expedición
@@ -506,8 +549,6 @@ const ModalContent = ({
                 value={formData.fechaExpedicion}
               />
             </div>
-
-            {/* Dropdown Principal (6 opciones) */}
             <div className="flex flex-col gap-1">
               <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
                 Seleccione el Trámite:
@@ -526,73 +567,80 @@ const ModalContent = ({
                 </div>
               </div>
             </div>
-
-            {/* Si el trámite es "Por expedición o reposición" => mostrar dropdown de 3 o 5 años + categoría */}
-            {opcionTramite === 'expedicion-reposicion' && (
-              <>
-                {/* Duración */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
-                    Duración de la licencia:
-                  </label>
-                  <div className="relative">
-                    <Select
-                      className="w-full font-kanit-medium text-xl pr-10"
-                      icon={null}
-                      placeholder="Seleccione años"
-                      options={duracionOptions}
-                      value={formData.duracion}
-                      onChange={handleDuracionChange}
-                    />
-                    <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
-                      <Icon name="angle down" className="text-gray-600" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tipo de licencia (A, B, C.) */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
-                    Tipo de Licencia:
-                  </label>
-                  <div className="relative">
-                    <Select
-                      className="w-full font-kanit-medium text-xl pr-10"
-                      icon={null}
-                      placeholder="Seleccione categoría"
-                      options={tipoLicencias}
-                      value={formData.tipoLicencia}
-                      onChange={handrleTipoLicencia}
-                    />
-                    <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
-                      <Icon name="angle down" className="text-gray-600" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Categoría (Chofer, Automovilista, etc.) */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
-                    Categoría:
-                  </label>
-                  <div className="relative">
-                    <Select
-                      className="w-full font-kanit-medium text-xl pr-10"
-                      icon={null}
-                      placeholder="Seleccione categoría"
-                      options={categoriasExpedicionOptions}
-                      value={formData.licenciaDe}
-                      onChange={handleCategoriaExpedicionChange}
-                    />
-                    <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
-                      <Icon name="angle down" className="text-gray-600" />
-                    </div>
-                  </div>
-                </div>
-              </>
+            {showResponsable && (
+              <div className="flex flex-col gap-1">
+                <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
+                  Ingrese el nombre del Responsable
+                </label>
+                <Form.Input
+                  id="responsable"
+                  name="responsable"
+                  className="font-kanit-medium text-xl"
+                  type="text"
+                  placeholder="Responsable"
+                  value={formData.responsable}
+                  onChange={handleChange}
+                />
+              </div>
             )}
-
-            {/* Si el trámite es "Conductores o conductoras del servicio público" => mostrar dropdown de 3 o 5 años */}
+            {/* {opcionTramite === 'expedicion-reposicion' && (
+              <> */}
+            <div className="flex flex-col gap-1">
+              <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
+                Duración de la licencia:
+              </label>
+              <div className="relative">
+                <Select
+                  className="w-full font-kanit-medium text-xl pr-10"
+                  icon={null}
+                  placeholder="Seleccione años"
+                  options={duracionOptions}
+                  value={formData.duracion}
+                  onChange={handleDuracionChange}
+                />
+                <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
+                  <Icon name="angle down" className="text-gray-600" />
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
+                Tipo de Licencia:
+              </label>
+              <div className="relative">
+                <Select
+                  className="w-full font-kanit-medium text-xl pr-10"
+                  icon={null}
+                  placeholder="Seleccione categoría"
+                  options={tipoLicencias}
+                  value={formData.tipoLicencia}
+                  onChange={handrleTipoLicencia}
+                />
+                <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
+                  <Icon name="angle down" className="text-gray-600" />
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
+                Categoría:
+              </label>
+              <div className="relative">
+                <Select
+                  className="w-full font-kanit-medium text-xl pr-10"
+                  icon={null}
+                  placeholder="Seleccione categoría"
+                  options={categoriasExpedicionOptions}
+                  value={formData.licenciaDe}
+                  onChange={handleCategoriaExpedicionChange}
+                />
+                <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
+                  <Icon name="angle down" className="text-gray-600" />
+                </div>
+              </div>
+            </div>
+            {/* </>
+            )} */}
             {opcionTramite === 'serv-publico' && (
               <div className="flex flex-col gap-1">
                 <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
@@ -613,8 +661,6 @@ const ModalContent = ({
                 </div>
               </div>
             )}
-
-            {/* Fecha de Vencimiento Calculada */}
             <div className="flex flex-col gap-1">
               <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
                 Fecha de Vencimiento
@@ -628,21 +674,53 @@ const ModalContent = ({
               />
             </div>
 
-            {/* Costo/Precio */}
             <div className="flex flex-col gap-1">
               <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
                 Costo
               </label>
               <Form.Input
+                id="costo"
+                name="costo"
                 className="font-kanit-medium text-xl"
-                type="text"
-                readOnly
-                placeholder="Costo"
+                placeholder="Costos"
                 value={formData.costo}
+                onChange={handleChange}
+                fluid
               />
             </div>
 
-            {/* Número de Licencia */}
+            <div className="flex flex-col gap-1">
+              <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
+                Descuento:
+              </label>
+              <div className="relative">
+                <Select
+                  className="w-full font-kanit-medium text-xl pr-10"
+                  icon={null}
+                  placeholder="Seleccione descuento"
+                  options={porcentDescuento}
+                  value={formData.descPorcentaje}
+                  onChange={handleDescuentoChange}
+                />
+                <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
+                  <Icon name="angle down" className="text-gray-600" />
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
+                Costo Final
+              </label>
+              <Form.Input
+                id="costoFinal"
+                name="costoFinal"
+                className="font-kanit-medium text-xl"
+                placeholder="Costo Total"
+                value={formData.costoFinal}
+                readOnly
+              />
+            </div>
+
             <div className="flex flex-col gap-1">
               <label className="text-pantoneCoolGray11C font-kanit-regular text-[18px]">
                 Número de Licencia
@@ -655,21 +733,20 @@ const ModalContent = ({
                 readOnly
               />
             </div>
-
-            {/* Botón Generar Número de Licencia */}
             <Button color="blue" type="button" onClick={handleGenerarLicencia}>
               Generar Número de Licencia
             </Button>
           </div>
-
-          {/* Columna Derecha */}
           <div className="flex flex-col bg-white w-4/12 justify-around">
             <div className="flex flex-col w-10/12 bg-white h-2/6 items-center justify-center">
               <label className="font-kanit-regular text-pantoneCoolGray11C text-2xl mb-1">
                 Fotografía del interesado
               </label>
               <Image
-                src={`http://192.168.0.109:3000/uploads/${fotografia}`}
+                src={`http://192.168.1.64:3000/uploads/${fotografia}`}
+                // src={`http://192.168.0.109:3000/uploads/${fotografia}`}
+                // src={`http://192.168.50.185:3000/uploads/${fotografia}`}
+
                 className="object-contain max-w-full max-h-full"
               />
             </div>
@@ -679,7 +756,10 @@ const ModalContent = ({
                 Firma del interesado
               </label>
               <Image
-                src={`http://192.168.0.109:3000/uploads/${firma}`}
+                src={`http://192.168.1.64:3000/uploads/${firma}`}
+                // src={`http://192.168.0.109:3000/uploads/${firma}`}
+                // src={`http://192.168.50.185:3000/uploads/${firma}`}
+
                 className="object-contain max-w-full max-h-full"
               />
             </div>
@@ -697,10 +777,12 @@ const ModalContent = ({
             </div>
           </div>
         </Form>
-
-        {/* Mostrar mensajes de éxito o error */}
-        {success && <p className="text-green-600 font-bold mt-2">{success}</p>}
-        {error && <p className="text-red-600 font-bold mt-2">{error}</p>}
+        <ModalMessages
+          isOpen={isModalRegisterOpen}
+          onClose={() => setIsModalRegisterOpen(false)}
+          type={modalTypeRegister}
+          message={modalMesageRegister}
+        />
       </div>
     </>
   )

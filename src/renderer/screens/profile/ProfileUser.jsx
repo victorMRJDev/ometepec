@@ -1,17 +1,13 @@
 import React from 'react'
 import ProfileInfo from '../../components/profile/ProfileInfo';
+import { useUser } from '../../hooks/UserContext';
 
-
-const dataInfo = {
-  name: 'Juan Perez',
-  rol: 'Administrador',
-  numEmpleado: '123456',
-  curp: 'PERJ123456HDFR'
-}
 const ProfileUser = ()=> {
+
+  const { user } = useUser();
   return (
     <div className="min-h-screen py-10">
-      <ProfileInfo dataInfo={dataInfo}/>
+      <ProfileInfo dataInfo={user}/>
     </div>
   )
 }

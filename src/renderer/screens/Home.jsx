@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { useUser } from '../hooks/UserContext'
 import logo from '../../assets/logos/logo_fRojo.jpg'
-import logo_ometepec from '../../assets/logos/logo_ometepec.jpg'
+import logo_ometepec from '../../assets/Ometepec/PNG/logo_ome.png'
 import { Form, Button } from 'semantic-ui-react'
 
 const Home = () => {
@@ -25,7 +25,7 @@ const Home = () => {
         setUser(response)
         // alert('Bienvenido')
       } else {
-        alert('Usuario o contraseña incorrectos')
+        // alert('Usuario o contraseña incorrectos')
       }
     } catch (err) {
       console.error('Error en el inicio de sesión:', err)

@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: ometepect-deskapp
+productName: Licencias Ometepec
 directories:
   buildResources: build
 files:
@@ -22,7 +22,7 @@ asarUnpack:
   - firmas/**
   - fotografias/**
 win:
-  executableName: ometepect-deskapp
+  executableName: Licencias Ometepec
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

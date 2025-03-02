@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 
 import logoGro from '../../../assets/logos/logo_fRojo.jpg'
 
-const { App } = window
+import { useUser } from '../../hooks/UserContext'
 
+const { App } = window
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true)
@@ -13,6 +14,12 @@ const Sidebar = () => {
   const toggleSidebar = () => setIsOpen(!isOpen)
 
   const navigate = useNavigate()
+
+  const { user, setUser } = useUser()
+
+  const handleLogout = () => {
+    setUser(null)
+  }
 
   return (
     <div className="flex h-screen ">
@@ -43,7 +50,7 @@ const Sidebar = () => {
               <span>Inicio</span>
             </li>
             <li
-              onClick={() => navigate('/addLicense')  }
+              onClick={() => navigate('/addLicense')}
               // onClick={() => console.log('PRESIONADO')}
               className="flex items-center gap-4 py-2 px-3 rounded-lg hover:bg-pantone465C-60 cursor-pointer"
             >
@@ -64,13 +71,16 @@ const Sidebar = () => {
               {/* <FaUserAlt size={20} /> */}
               <span>Perfil</span>
             </li>
-            <li
-              onClick={() => navigate('/usersystem')}
-              className="flex items-center gap-4 py-2 px-3 rounded-lg hover:bg-pantone465C-60 cursor-pointer"
-            >
-              {/* <FaCog size={20} /> */}
-              <span>Usuarios del sistema</span>
-            </li>
+            {user?.rolUsuario === 'administrador' && (
+              <li
+                onClick={() => navigate('/usersystem')}
+                className="flex items-center gap-4 py-2 px-3 rounded-lg hover:bg-pantone465C-60 cursor-pointer"
+              >
+                {/* <FaCog size={20} /> */}
+                <span>Usuarios del sistema</span>
+              </li>
+            )}
+
             <li className="flex flex-col gap-0">
               <div
                 onClick={() => setShowPlacas(!showPlacas)}
@@ -90,7 +100,7 @@ const Sidebar = () => {
                     onClick={() => navigate('/placas/printPerm')}
                     className="flex items-center gap-4 py-2 px-3 rounded-lg hover:bg-pantone465C-60 cursor-pointer"
                   >
-                    <span>Generar Permisos</span>
+                    <span>Descargar Permisos</span>
                   </li>
                   <li
                     onClick={() => navigate('/placas/history')}
@@ -100,6 +110,12 @@ const Sidebar = () => {
                   </li>
                 </ul>
               )}
+            </li>
+            <li
+              onClick={handleLogout}
+              className="flex items-center gap-4 py-2 px-3 rounded-lg hover:bg-pantone465C-60 cursor-pointer"
+            >
+              <span>Cerrar sesión</span>
             </li>
           </ul>
         </nav>

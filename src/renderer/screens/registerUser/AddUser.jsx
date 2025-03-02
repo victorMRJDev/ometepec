@@ -1,4 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { Form, Dropdown, Input, Button, Icon } from 'semantic-ui-react'
+import { useNavigate } from 'react-router-dom'
 
 const AddUser = () => {
   const [formData, setFormData] = React.useState({
@@ -11,8 +13,13 @@ const AddUser = () => {
     edad: '',
     domicilio: '',
     genero: '',
-    rolUsuario: ''
+    rolUsuario: '',
+    correo: '',
+    password: ''
   })
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const navigate = useNavigate()
 
   const sexoOptions = [
     { key: 'm', text: 'Masculino', value: 'masculino' },
@@ -21,8 +28,8 @@ const AddUser = () => {
   ]
 
   const rol = [
-    { key: 'm', text: 'Administrador', value: 'administrador' },
-    { key: 'f', text: 'Usuario', value: 'usuario' }
+    { key: 'a', text: 'Administrador', value: 'administrador' },
+    { key: 'u', text: 'Usuario', value: 'usuario' }
   ]
   const handleChange = (e, { name, value }) => {
     setFormData({ ...formData, [name]: value })
@@ -33,11 +40,13 @@ const AddUser = () => {
 
     setIsSubmitting(true)
     const userData = { ...formData }
+    console.log(formData)
+    console.log(formData.rolUsuario)
 
     try {
-      const response = await window.api.addUserSystem(userData, 'Administrador')
+      const response = await window.api.addUserSystem(formData)
       if (response.success) {
-        alert('Usuario registrado correctamente. ID: ' + response.id)
+        // alert('Usuario registrado correctamente. ID: ' + response.id)
         setFormData({
           nombre: '',
           apellidoPaterno: '',
@@ -48,27 +57,36 @@ const AddUser = () => {
           edad: '',
           domicilio: '',
           genero: '',
-          rolUsuario: ''
+          rolUsuario: '',
+          correo: '',
+          password: ''
+
         })
-        handleClearSignature()
+        // handleClearSignature()
       } else {
-        alert('Error al registrar al usuario: ' + response.error)
+        console.log(response.error)
+        // alert('Error al registrar al usuario: ' + response.error)
       }
     } catch (error) {
       console.log('Error al enviar los datos: ' + error)
-      alert('Ocurrió un error al enviar los datos. Por favor, intenta nuevamente.')
+      // alert('Ocurrió un error al enviar los datos. Por favor, intenta nuevamente.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 py-4 px-2">
-      <From>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 py-4 mb-10 px-2">
+       <div>
+        <Button onClick={() => navigate('/usersystem')} primary>
+          Volver a la lista de usuarios
+        </Button>
+      </div>
+      <Form
         onSubmit={handleSubmit}
-        className="flex flex-col md:flex-row gap-6 bg-white w-full max-w-7xl p-6 rounded-lg
-        shadow-lg"
-        <div className="flex flex-col gap-4 w-full md:w-1/2">
+        className="flex flex-row md:flex-row gap-6 bg-white mb-10 w-full max-w-7xl p-8 rounded-lg max-h-screen shadow-lg overflow-auto"
+      >
+        <div className="flex flex-col gap-4 w-full">
           <div className="flex flex-col gap-1">
             <label htmlFor="nombre" className="font-calibri-bold">
               Nombres
@@ -150,6 +168,22 @@ const AddUser = () => {
             />
           </div>
           <div className="flex flex-col gap-1">
+            <label htmlFor="rfc" className="font-calibri-bold">
+              Edad
+            </label>
+            <Form.Input
+              id="edad"
+              placeholder="Edad"
+              name="edad"
+              value={formData.edad}
+              onChange={handleChange}
+              fluid
+            />
+          </div>
+
+        </div>
+        <div className="flex flex-col gap-4 w-full md:w-1/2 lg:w-1/2">
+        <div className="flex flex-col gap-1">
             <label htmlFor="domicilio" className="font-calibri-bold">
               Domicilio
             </label>
@@ -162,7 +196,8 @@ const AddUser = () => {
               fluid
             />
           </div>
-          <div className="flex flex-col gap-1">
+
+        <div className="flex flex-col gap-1">
             <label htmlFor="genero" className="font-calibri-bold">
               Sexo
             </label>
@@ -175,7 +210,7 @@ const AddUser = () => {
                 options={sexoOptions}
                 name="genero"
                 icon={null}
-                value={formData.genero}
+                value={formData.genero }
                 onChange={handleChange}
               />
               <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
@@ -183,7 +218,8 @@ const AddUser = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-1">
+
+        <div className="flex flex-col gap-1">
             <label htmlFor="rolUsuario" className="font-calibri-bold">
               Rol de Usuario
             </label>
@@ -196,14 +232,44 @@ const AddUser = () => {
                 options={rol}
                 name="rolUsuario"
                 icon={null}
-                value={formData.rolUsuario}
+                value={formData.rolUsuario }
                 onChange={handleChange}
               />
               <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
                 <Icon name="angle down" className="text-gray-600" />
               </div>
             </div>
-            <div className="flex justify-center mt-6 w-full">
+
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="domicilio" className="font-calibri-bold">
+              Agregue un correo o un usuario
+            </label>
+            <Form.Input
+              id="correo"
+              placeholder="Ejemplo: usuario123"
+              name="correo"
+              value={formData.correo}
+              onChange={handleChange}
+              fluid
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="domicilio" className="font-calibri-bold">
+              Agregue una contraseña
+            </label>
+            <Form.Input
+              id="password"
+              placeholder="Agregue una contraseña"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              type='password'
+              fluid
+            />
+          </div>
+          <div className="flex justify-center mt-6 w-full">
               <Button
                 type="submit"
                 color="blue"
@@ -216,9 +282,10 @@ const AddUser = () => {
                 Enviar Datos
               </Button>
             </div>
-          </div>
         </div>
-      </From>
+        <div className='h-5'></div>
+        <div></div>
+      </Form>
     </div>
   )
 }

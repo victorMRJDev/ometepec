@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Input, Dropdown, Form, Button, Image, Segment, Icon } from 'semantic-ui-react'
 import Webcam from 'react-webcam'
+import ModalMessages from '../../components/modal/ModalMessages'
 
 const AddLicencia = () => {
   const [formData, setFormData] = useState({
@@ -27,13 +28,22 @@ const AddLicencia = () => {
     tipoLicencia: '',
     numLicencia: '',
     rutaIne: '',
-    rutaEstSanguineo: ''
+    rutaEstSanguineo: '',
+    condonacion: '',
+    observacionCondona: ''
   })
+
+  const [isModalRegisterOpen, setIsModalRegisterOpen] = useState(false)
+  const [modalTypeRegister, setModalTypeRegister] = useState('success')
+  const [modalMesageRegister, setModalMessageRegister] = useState('')
+  const [showMotivoCondonacion, setShowMotivoCondonacion] = useState(false)
 
   const [isCameraActive, setIsCameraActive] = useState(false)
   const webcamRef = useRef(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const fileInputRef = useRef(null)
+  const fileInputFirmaRef = useRef(null)
+  const [signatureKey, setSignatureKey] = useState(0)
   const canvasRef = useRef(null)
   const isDrawingRef = useRef(false)
 
@@ -47,9 +57,17 @@ const AddLicencia = () => {
     { key: 'si', text: 'Sí', value: 'si' },
     { key: 'no', text: 'No', value: 'no' }
   ]
+  const condonacionOptions = [
+    { key: 'si', text: 'Sí', value: 'si' },
+    { key: 'no', text: 'No', value: 'no' }
+  ]
 
   const handleChange = (e, { name, value }) => {
     setFormData({ ...formData, [name]: value })
+  }
+  const handleCondonacionChange = (e, { value }) => {
+    setFormData({ ...formData, condonacion: value })
+    setShowMotivoCondonacion(value === 'si')
   }
 
   const capture = () => {
@@ -122,8 +140,65 @@ const AddLicencia = () => {
       canvas.removeEventListener('pointercancel', handlePointerUp)
     }
   }, [])
+
+  const handleCanvasRef = useCallback((node) => {
+
+    canvasRef.current = node;
+    if (node) {
+      // El canvas se montó, configura sus listeners
+      node.style.touchAction = 'none'
+      const ctx = node.getContext('2d')
+      ctx.lineWidth = 2
+      ctx.lineCap = 'round'
+      ctx.strokeStyle = '#000000'
+
+      const getPointerPos = (e) => {
+        const rect = node.getBoundingClientRect()
+        return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        }
+      }
+
+      const handlePointerDown = (e) => {
+        e.preventDefault()
+        isDrawingRef.current = true
+        ctx.beginPath()
+        const pos = getPointerPos(e)
+        ctx.moveTo(pos.x, pos.y)
+      }
+      const handlePointerMove = (e) => {
+        if (!isDrawingRef.current) return
+        e.preventDefault()
+        const pos = getPointerPos(e)
+        ctx.lineTo(pos.x, pos.y)
+        ctx.stroke()
+      }
+      const handlePointerUp = (e) => {
+        e.preventDefault()
+        isDrawingRef.current = false
+        ctx.closePath()
+      }
+
+      node.addEventListener('pointerdown', handlePointerDown)
+      node.addEventListener('pointermove', handlePointerMove)
+      node.addEventListener('pointerup', handlePointerUp)
+      node.addEventListener('pointerleave', handlePointerUp)
+      node.addEventListener('pointercancel', handlePointerUp)
+      return () => {
+        canvas.removeEventListener('pointerdown', handlePointerDown)
+        canvas.removeEventListener('pointermove', handlePointerMove)
+        canvas.removeEventListener('pointerup', handlePointerUp)
+        canvas.removeEventListener('pointerleave', handlePointerUp)
+        canvas.removeEventListener('pointercancel', handlePointerUp)
+      }
+    }
+  }, [])
   const handleClearSignature = useCallback(() => {
     const canvas = canvasRef.current
+    if (!canvas) {
+      return
+    }
     const ctx = canvas.getContext('2d')
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     setFormData((prev) => ({ ...prev, firma: '' }))
@@ -134,6 +209,28 @@ const AddLicencia = () => {
 
     setFormData((prev) => ({ ...prev, firma: signatureDataURL }))
   }, [])
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setFormData((prev) => ({ ...prev, fotografia: reader.result }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleFileUploadFirma = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setFormData((prev) => ({ ...prev, firma: reader.result }))
+    }
+    reader.readAsDataURL(file)
+  }
 
   const [pdf1, setPdf1] = useState(null)
   const [pdf2, setPdf2] = useState(null)
@@ -180,7 +277,13 @@ const AddLicencia = () => {
       uploadDataPersona.append('images', fotoBlob)
       uploadDataPersona.append('images', firmaBlob)
 
-      const uploadResponse = await fetch('http://192.168.0.109:3000/subir', {
+      //OMETEPEC
+      const uploadResponse = await fetch('http://192.168.1.64:3000/subir', {
+      // const uploadResponse = await fetch('http://192.168.0.109:3000/subir', {
+      // const uploadResponse = await fetch('http://192.168.50.185:3000/subir', {
+        
+
+        //local
         method: 'POST',
         body: uploadDataPersona
       })
@@ -194,13 +297,20 @@ const AddLicencia = () => {
         rutaIne: archivos[0]?.rutaCompleta || '',
         rutaEstSanguineo: archivos[1]?.rutaCompleta || '',
         fotografia: archivos[2]?.rutaCompleta || '',
-        firma: archivos[3]?.rutaCompleta || '',
-
+        firma: archivos[3]?.rutaCompleta || ''
       }
 
       const response = await window.api.insertLicencia(updateFormData)
+      console.log(response)
+
+      console.log('DATOS FORMULARIO', updateFormData)
       if (response.success) {
-        alert('Licencia registrada exitosamente. ID: ' + response.id)
+        setModalTypeRegister('success')
+        setModalMessageRegister('Solicitud de licencia generada correctamente')
+        setIsModalRegisterOpen(true)
+
+        handleClearSignature()
+        setSignatureKey((prev) => prev + 1)
         setFormData({
           nombres: '',
           apellidoPaterno: '',
@@ -225,30 +335,36 @@ const AddLicencia = () => {
           tipoLicencia: '' || null,
           numLicencia: '' || null,
           rutaIne: '',
-          rutaEstSanguineo: ''
+          rutaEstSanguineo: '',
+          condonacion: '',
+          observacionCondona: ''
         })
-        handleClearSignature()
+
         if (pdf1Ref.current) pdf1Ref.current.value = ''
         if (pdf2Ref.current) pdf2Ref.current.value = ''
         setPdf1(null)
         setPdf2(null)
       } else {
+        setModalTypeRegister('error')
+        setModalMessageRegister('Error al registrar la solicitud de licencia')
+        setIsModalRegisterOpen(true)
         console.log('Error al registrar la licencia: ' + response.error)
-        // alert('Error al registrar la licencia: ' + response.error)
       }
     } catch (error) {
       console.log('Error al enviar los datos: ' + error)
-      // alert('Ocurrió un error al enviar los datos. Por favor, intenta nuevamente.')
+      setModalTypeRegister('error')
+      setModalMessageRegister('Error al enviar los datos. Por favor, intente de nuevo')
+      setIsModalRegisterOpen(true)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 py-4 px-2 overflow-auto max-h-screen overflow-y-auto">
+    <div className="flex items-center justify-center min-h-screen bg-white-100 py-4 px-2 overflow-auto">
       <Form
         onSubmit={handleSubmit}
-        className="flex flex-col md:flex-row gap-6 bg-white w-full max-w-7xl p-6 rounded-lg shadow-lg"
+        className="flex flex-col md:flex-row gap-6 bg-white w-full p-6 rounded-lg shadow-lg max-h-[95vh] overflow-y-auto"
       >
         <div className="flex flex-col gap-4 w-full md:w-1/3">
           <div className="flex flex-col gap-1">
@@ -367,6 +483,44 @@ const AddLicencia = () => {
               fluid
             />
           </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="condonacion" className="font-calibri-bold">
+              ¿Realizará condonación?
+            </label>
+            <div className="relative">
+              <Dropdown
+                id="condonacion"
+                placeholder="Selecciona una opción"
+                fluid
+                icon={null}
+                selection
+                options={condonacionOptions}
+                name="condonacion"
+                value={formData.condonacion}
+                onChange={handleCondonacionChange}
+              />
+              <div className="absolute top-0 right-2 h-full flex items-center pointer-events-none">
+                <Icon name="angle down" className="text-gray-600" />
+              </div>
+            </div>
+          </div>
+          {showMotivoCondonacion && (
+            <div className="flex flex-col gap-1 mt-2 mb-8">
+              <label htmlFor="observacionCondona" className="font-calibri-bold">
+                Motivo de condonación
+              </label>
+              <Form.Input
+                id="observacionCondona"
+                placeholder="Ingresa el motivo"
+                name="observacionCondona"
+                value={formData.observacionCondona}
+                onChange={handleChange}
+                fluid
+              />
+            </div>
+          )}
+          <br />
         </div>
 
         <div className="flex flex-col gap-4 w-full md:w-1/3">
@@ -461,7 +615,6 @@ const AddLicencia = () => {
               fluid
             />
           </div>
-          {/* Campos para subir los 4 archivos PDF */}
           <div className="flex flex-col gap-1">
             <label className="font-calibri-bold">Seleccione PDF del INE</label>
             <Form.Input
@@ -517,38 +670,43 @@ const AddLicencia = () => {
               </div>
             </div>
           ) : (
-            <Button
-              style={{
-                backgroundColor: '#FFFFFF',
-                border: '2px solid #ab0033',
-                borderColor: '#ab0033'
-              }}
-              type="button"
-              color="white"
-              onClick={activateCamera}
-            >
-              <Icon name="camera retro" /> Activar Cámara
-            </Button>
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  border: '2px solid #ab0033',
+                  borderColor: '#ab0033'
+                }}
+                type="button"
+                color="white"
+                onClick={activateCamera}
+              >
+                <Icon name="camera retro" /> Activar Cámara
+              </Button>
+              <Button
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  border: '2px solid #ab0033',
+                  borderColor: '#ab0033'
+                }}
+                type="button"
+                color="white"
+                onClick={() => fileInputRef.current.click()}
+              >
+                <Icon name="upload" /> Subir Foto
+              </Button>
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleFileUpload}
+              />
+            </div>
           )}
           <div className="mt-4">
             <label className="font-calibri-bold">Firma del Conductor</label>
-            <canvas
-              ref={canvasRef}
-              width={400}
-              height={150}
-              className="border border-gray-300 rounded mt-2"
-            ></canvas>
-
-            <div className="flex justify-between mt-2">
-              <Button type="button" color="red" onClick={handleClearSignature}>
-                <Icon name="eraser" /> Limpiar
-              </Button>
-              <Button type="button" color="green" onClick={handleSaveSignature}>
-                <Icon name="save" /> Guardar Firma
-              </Button>
-            </div>
-
-            {formData.firma && (
+            {formData.firma ? (
               <div className="flex flex-col items-center mt-3">
                 <label className="text-gray-700 font-semibold mb-2">Previsualización:</label>
                 <Image
@@ -558,7 +716,60 @@ const AddLicencia = () => {
                   bordered
                   style={{ backgroundColor: '#f1f1f1' }}
                 />
+                {/* <Button type="button" color="red" className="mt-2" onClick={handleClearSignature}>
+                  <Icon name="redo" /> Re-capturar Firma
+                </Button> */}
               </div>
+            ) : (
+              <>
+                <canvas
+                  key={signatureKey}
+                  // ref={canvasRef}
+                  ref={handleCanvasRef}
+                  width={400}
+                  height={150}
+                  className="border border-gray-300 rounded mt-2"
+                ></canvas>
+
+                <div className="flex justify-between mt-2">
+                  <Button type="button" color="red" onClick={handleClearSignature}>
+                    <Icon name="eraser" /> Limpiar
+                  </Button>
+                  <Button type="button" color="green" onClick={handleSaveSignature}>
+                    <Icon name="save" /> Guardar Firma
+                  </Button>
+                </div>
+
+                {formData.firma && (
+                  <div className="flex flex-col items-center mt-3">
+                    <label className="text-gray-700 font-semibold mb-2">Previsualización:</label>
+                    <Image
+                      src={formData.firma}
+                      size="medium"
+                      alt="Firma"
+                      bordered
+                      style={{ backgroundColor: '#f1f1f1' }}
+                    />
+                  </div>
+                )}
+
+                <div className="mt-3">
+                  <Button
+                    type="button"
+                    color="blue"
+                    onClick={() => fileInputFirmaRef.current.click()}
+                  >
+                    <Icon name="upload" /> Subir Firma
+                  </Button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputFirmaRef}
+                    style={{ display: 'none' }}
+                    onChange={handleFileUploadFirma}
+                  />
+                </div>
+              </>
             )}
           </div>
           <div className="flex justify-center mt-6 w-full">
@@ -576,6 +787,12 @@ const AddLicencia = () => {
           </div>
         </div>
       </Form>
+      <ModalMessages
+        isOpen={isModalRegisterOpen}
+        onClose={() => setIsModalRegisterOpen(false)}
+        type={modalTypeRegister}
+        message={modalMesageRegister}
+      />
     </div>
   )
 }
