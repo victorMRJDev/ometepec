@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 
-import logogro from '../../../assets/estadogro.png'
+import logogro from '../../../assets/LogoGobierno_tranformando.png'
 import ssplogo from '../../../assets/ssp_logo.png'
 import logoome from '../../../assets/Ometepec/PNG/logo_vBlancoOme.png'
 import cinta from '../../../assets//cintaSuperior.png'
@@ -158,10 +158,10 @@ const GenerateReports = () => {
       doc.addImage(cintaSup, 'PNG', 20, 25, pageWidthS - 50, 20)
 
       // Añadir logos
-      const logoWidth = 100
+      const logoWidth = 150
       const logoHeight = 50
-      doc.addImage(logoIzquierda, 'PNG', 20, 60, logoWidth, logoHeight)
-      doc.addImage(logoDerecha, 'PNG', pageWidth - logoWidth - 20, 60, logoWidth, logoHeight)
+      doc.addImage(logoIzquierda, 'PNG', 20, 50, logoWidth + 10, logoHeight)
+      doc.addImage(logoDerecha, 'PNG', pageWidth - logoWidth - 20, 50, logoWidth, logoHeight)
 
       // Añadir textos principales
       doc.setFontSize(16)
@@ -189,7 +189,7 @@ const GenerateReports = () => {
       })
 
       // Segunda columna - Logo central
-      doc.addImage(logoCentral, 'PNG', pageWidth / 2 - 50, columnY - 10, 50, 50)
+      doc.addImage(logoCentral, 'PNG', pageWidth / 2 - 50, 50, 70, 50)
       const desplazamientoX = 30 // Puedes ajustar este valor según tus necesidades
 
       // const thirdColumnX = 2 * columnWidth + columnWidth / 2
@@ -292,8 +292,9 @@ const GenerateReports = () => {
       doc.setFontSize(12)
 
       agregarTextoCentrado(doc, 'Atentamente,', firmaY + 40, 12)
-      agregarTextoCentrado(doc, 'CMTE. SABAD GARCÍA PRUDENTE', firmaY + 80, 12)
-      agregarTextoCentrado(doc, 'DIRECTOR DE TRÁNSITO MUNICIPAL DE OMETEPEC, GRO.', firmaY + 93, 12)
+      agregarTextoCentrado(doc, 'C. ARTURO GARCÍA RAMÍREZz', firmaY + 80, 12)
+      agregarTextoCentrado(doc, 'COORDINADOR DE PERMISOS Y LICENCIAS DEL H.', firmaY + 93, 12)
+      agregarTextoCentrado(doc, 'AYUNTAMIENTO MUNICIPAL DE OMETEPEC, GRO.', firmaY + 105, 12)
 
       // Guardar o descargar el PDF
       doc.save(`Permiso_Provisional_${permiso.folioUnico}.pdf`)
